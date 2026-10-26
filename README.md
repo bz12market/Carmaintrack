@@ -27,9 +27,26 @@ Tailwind e Supabase.
 - **Lembretes**: mostra os veículos atrasados ou dentro do prazo de aviso. O
   botão abre o WhatsApp do cliente com a mensagem já escrita e o link do
   histórico, e marca o lembrete como enviado.
-- **Cartões e QR**: gera um código QR único por veículo. Permite imprimir
-  cartões de 85×55 mm (com logótipo, matrícula e QR) ou descarregar o QR em
-  PNG.
+- **Etiquetas e QR**: cada veículo tem um código QR único. A etiqueta para
+  colar no interior do para-brisas, no lugar do autocolante de papel da
+  mudança de óleo, tem:
+  - o logótipo e o nome da oficina;
+  - a matrícula e o modelo;
+  - "Leia · veja o histórico" e a próxima revisão em km e data;
+  - o QR.
+
+  Depois de registar uma revisão, a ficha do veículo sugere logo "Imprimir
+  etiqueta". Opções disponíveis, guardadas por computador:
+  - **Tipo de impressora**: *Térmica* (preto e branco, sem fundos escuros,
+    porque as térmicas só imprimem a preto) ou *A cores*.
+  - **Papel**: *Rolo de etiquetas* (uma página por etiqueta, com o tamanho
+    exato) ou *Folha A4 de autocolantes*.
+  - **Tamanho**: 100×60 e 100×50 mm (térmicas de 4"), 85×55 mm (cartão),
+    62×29 mm (Brother QL) e 50×30 mm (portáteis, tipo Niimbot).
+  - **Cópias** por veículo, e descarregar só o QR em PNG.
+
+  Na janela de impressão, escolhe a impressora e o papel com o mesmo tamanho,
+  margens "Nenhuma", escala 100% e desativa "Cabeçalhos e rodapés".
 - **Personalizar**: logótipo, nome, slogan, cor principal, telefone,
   WhatsApp e morada. Define ainda o intervalo padrão de revisão (km/meses) e
   os limites de aviso (km/dias).

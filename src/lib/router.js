@@ -1,17 +1,18 @@
 import { useEffect, useState } from "react";
 
-// Router mínimo baseado no pathname (History API).
+// Router mínimo baseado na History API. Devolve pathname + query.
 export function navigate(to) {
-  if (to === window.location.pathname) return;
+  if (to === window.location.pathname + window.location.search) return;
   window.history.pushState({}, "", to);
   window.dispatchEvent(new PopStateEvent("popstate"));
   window.scrollTo(0, 0);
 }
 
 export function usePath() {
-  const [path, setPath] = useState(window.location.pathname);
+  const here = () => window.location.pathname + window.location.search;
+  const [path, setPath] = useState(here);
   useEffect(() => {
-    const on = () => setPath(window.location.pathname);
+    const on = () => setPath(here());
     window.addEventListener("popstate", on);
     return () => window.removeEventListener("popstate", on);
   }, []);

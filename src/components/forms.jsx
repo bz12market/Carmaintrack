@@ -263,7 +263,7 @@ export function ServiceForm({ vehicleId, service, onClose }) {
       });
       if (km != null && km > (vehicle.current_km || 0)) await save("vehicles", { ...vehicle, current_km: km });
       onClose();
-      navigate(`/veiculos/${vehicle.id}`);
+      navigate(`/veiculos/${vehicle.id}${service ? "" : "?etiqueta=1"}`);
     } catch (e2) {
       setErr(e2.message || String(e2));
       setBusy(false);

@@ -16,10 +16,11 @@ import Cards from "./pages/Cards.jsx";
 import Settings from "./pages/Settings.jsx";
 
 export default function App() {
-  const path = usePath();
+  const url = usePath();
+  const path = url.split("?")[0];
   const portal = path.match(/^\/v\/([A-Za-z0-9]+)\/?$/);
   if (portal) return <Portal token={portal[1]} />;
-  return <AdminApp path={path} />;
+  return <AdminApp path={path} url={url} />;
 }
 
 function Spinner() {
@@ -30,7 +31,7 @@ function Spinner() {
   );
 }
 
-function AdminApp({ path }) {
+function AdminApp({ path, url }) {
   const [session, setSession] = useState(undefined);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -119,10 +120,10 @@ function AdminApp({ path }) {
 
   const vehicleMatch = path.match(/^\/veiculos\/([^/]+)$/);
   let page;
-  if (vehicleMatch) page = <VehicleDetail id={vehicleMatch[1]} />;
+  if (vehicleMatch) page = <VehicleDetail key={url} id={vehicleMatch[1]} />;
   else if (path === "/veiculos") page = <Vehicles />;
   else if (path === "/lembretes") page = <Reminders />;
-  else if (path === "/cartoes") page = <Cards />;
+  else if (path === "/cartoes") page = <Cards key={url} />;
   else if (path === "/personalizar") page = <Settings />;
   else page = <Dashboard />;
 

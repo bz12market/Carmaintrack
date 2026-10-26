@@ -119,7 +119,7 @@ export default function Dashboard() {
         {[
           ["/veiculos", "Clientes e veículos", Users],
           ["/lembretes", "Lembretes", Bell],
-          ["/cartoes", "Cartões e QR", QrCode],
+          ["/cartoes", "Etiquetas e QR", QrCode],
         ].map(([to, label, Icon]) => (
           <Link key={to} to={to} className="card flex items-center gap-3 px-4 py-3 text-sm font-medium text-white hover:border-brand/40">
             <Icon size={18} className="text-brand" /> {label}

@@ -20,7 +20,7 @@ const NAV = [
   { to: "/", label: "Início", icon: Home },
   { to: "/veiculos", label: "Clientes e veículos", icon: Users },
   { to: "/lembretes", label: "Lembretes", icon: Bell, badge: true },
-  { to: "/cartoes", label: "Cartões e QR", icon: QrCode },
+  { to: "/cartoes", label: "Etiquetas e QR", icon: QrCode },
   { to: "/personalizar", label: "Personalizar", icon: Palette },
 ];
 
@@ -140,7 +140,7 @@ export default function Layout({ path, email, children }) {
         </Button>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 pb-24">{children}</main>
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-24 print:m-0 print:max-w-none print:p-0">{children}</main>
     </div>
   );
 }

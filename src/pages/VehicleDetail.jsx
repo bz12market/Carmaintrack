@@ -11,7 +11,8 @@ import {
   Gauge,
   CalendarClock,
   Check,
-  QrCode,
+  Printer,
+  X,
 } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { navigate } from "../lib/router.js";
@@ -87,6 +88,7 @@ export default function VehicleDetail({ id }) {
   const { data, statuses, clientOf, openRecord, openService, remove } = useStore();
   const [modal, setModal] = useState(null);
   const [copied, setCopied] = useState(false);
+  const [labelHint, setLabelHint] = useState(() => new URLSearchParams(window.location.search).get("etiqueta") === "1");
   const v = data.vehicles.find((x) => x.id === id);
 
   if (!v)
@@ -121,6 +123,27 @@ export default function VehicleDetail({ id }) {
 
   return (
     <div className="space-y-6">
+      {labelHint && (
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
+          <Check className="text-green-400" size={20} />
+          <p className="flex-1 text-sm text-green-100">
+            Serviço guardado. Imprima a etiqueta com a próxima revisão e cole-a no para-brisas antes de entregar o carro.
+          </p>
+          <Button onClick={() => navigate(`/cartoes?v=${v.id}`)}>
+            <Printer size={16} /> Imprimir etiqueta
+          </Button>
+          <button
+            onClick={() => {
+              window.history.replaceState({}, "", `/veiculos/${v.id}`);
+              setLabelHint(false);
+            }}
+            className="rounded-lg p-1.5 text-green-200/70 hover:bg-white/10"
+            aria-label="Fechar"
+          >
+            <X size={18} />
+          </button>
+        </div>
+      )}
       <Link to="/veiculos" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
         <ArrowLeft size={16} /> Clientes e veículos
       </Link>
@@ -191,7 +214,7 @@ export default function VehicleDetail({ id }) {
             {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Copiado" : "Copiar link"}
           </Button>
           <Button variant="ghost" onClick={() => navigate(`/cartoes?v=${v.id}`)}>
-            <QrCode size={16} /> Cartão QR
+            <Printer size={16} /> Imprimir etiqueta
           </Button>
           {c?.phone && (
             <Button variant="ghost" href={`tel:${c.phone.replace(/\s/g, "")}`}>
