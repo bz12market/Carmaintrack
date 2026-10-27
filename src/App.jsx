@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import * as db from "./lib/db.js";
-import { usePath } from "./lib/router.js";
+import { go, setArea, usePath } from "./lib/router.js";
 import { StoreContext } from "./lib/store.js";
 import { vehicleStatus } from "./lib/util.js";
+import { applyTheme, normalizeTheme } from "./lib/theme.js";
 import Layout from "./components/Layout.jsx";
 import { RecordForm, ServiceForm } from "./components/forms.jsx";
 import Login from "./pages/Login.jsx";
@@ -14,52 +15,95 @@ import VehicleDetail from "./pages/VehicleDetail.jsx";
 import Reminders from "./pages/Reminders.jsx";
 import Cards from "./pages/Cards.jsx";
 import Settings from "./pages/Settings.jsx";
+import Landing from "./pages/Landing.jsx";
+import Register from "./pages/Register.jsx";
+import { SetPassword, SubscriptionRequired } from "./pages/Account.jsx";
 
+const PORTAL = /^\/v\/([A-Za-z0-9]+)\/?$/;
+
+// Zonas da app:
+//   /              landing page (pública)
+//   /entrar        login            /registo   criar conta depois do pagamento
+//   /app/...       painel da oficina (login + subscrição ativa)
+//   /demo/...      demonstração com dados de exemplo, sem login
+//   /v/<código>    portal público do cliente (e /demo/v/<código> na demo)
 export default function App() {
   const url = usePath();
   const path = url.split("?")[0];
-  const portal = path.match(/^\/v\/([A-Za-z0-9]+)\/?$/);
+
+  if (path === "/demo" || path.startsWith("/demo/")) {
+    db.setDemo(true);
+    setArea("/demo", "/demo");
+    const inner = path.slice("/demo".length) || "/";
+    const portal = inner.match(PORTAL);
+    if (portal) return <Portal token={portal[1]} />;
+    return <AdminApp key="demo" path={inner} url={url} />;
+  }
+
+  db.setDemo(false);
+  if (path === "/app" || path.startsWith("/app/")) {
+    setArea("/app", "");
+    return <AdminApp key="app" path={path.slice("/app".length) || "/"} url={url} />;
+  }
+
+  setArea("", "");
+  const portal = path.match(PORTAL);
   if (portal) return <Portal token={portal[1]} />;
-  return <AdminApp path={path} url={url} />;
+  if (path === "/entrar") return <Login />;
+  if (path === "/registo") return <Register />;
+  return <Landing />;
 }
 
 function Spinner() {
   return (
     <div className="flex min-h-dvh items-center justify-center">
-      <Loader2 className="animate-spin text-slate-500" size={32} />
+      <Loader2 className="animate-spin text-subtle" size={32} />
     </div>
   );
 }
 
 function AdminApp({ path, url }) {
   const [session, setSession] = useState(undefined);
+  const [recovery, setRecovery] = useState(db.recoveryFromUrl);
+  const [subscription, setSubscription] = useState(undefined);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
   const [modal, setModal] = useState(null); // { type: "record" | "service", ... }
 
   useEffect(() => {
     db.getSession().then(setSession);
-    return db.onAuthChange(setSession);
+    return db.onAuthChange((s, event) => {
+      setSession(s);
+      // Link "esqueci-me da palavra-passe" do email: pede a nova palavra-passe.
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+    });
   }, []);
 
   const refresh = useCallback(async () => {
     try {
-      setData(await db.loadAll());
+      const sub = await db.getSubscription();
+      setSubscription(sub);
+      // Sem subscrição ativa a base de dados recusa o acesso (RLS).
+      if (db.isActive(sub)) setData(await db.loadAll());
       setError("");
     } catch (e) {
       setError(e.message || String(e));
     }
   }, []);
 
+  // Só recarrega quando muda a conta, não a cada renovação do token.
+  const userId = session?.user?.id || (session ? "demo" : null);
   useEffect(() => {
-    if (session) refresh();
-    else setData(null);
-  }, [session, refresh]);
+    if (userId) refresh();
+    else {
+      setData(null);
+      setSubscription(undefined);
+    }
+  }, [userId, refresh]);
 
   useEffect(() => {
-    if (data?.workshop?.primary_color)
-      document.documentElement.style.setProperty("--brand", data.workshop.primary_color);
-  }, [data?.workshop?.primary_color]);
+    if (data?.workshop) applyTheme(normalizeTheme(data.workshop.theme, data.workshop.primary_color));
+  }, [data?.workshop?.theme, data?.workshop?.primary_color]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = useCallback(async (table, row) => {
     const saved = await db.saveRow(table, row);
@@ -93,6 +137,7 @@ function AdminApp({ path, url }) {
     () => ({
       data,
       statuses,
+      subscription,
       save,
       remove,
       refresh,
@@ -100,22 +145,29 @@ function AdminApp({ path, url }) {
       openRecord: (vehicle) => setModal({ type: "record", vehicle }),
       openService: (vehicleId, service) => setModal({ type: "service", vehicleId, service }),
     }),
-    [data, statuses, save, remove, refresh]
+    [data, statuses, subscription, save, remove, refresh]
   );
 
   if (session === undefined) return <Spinner />;
   if (!session) return <Login />;
+  if (recovery) return <SetPassword onDone={() => setRecovery(false)} />;
   if (error)
     return (
       <div className="mx-auto max-w-md p-6 pt-24 text-center">
-        <p className="font-semibold text-red-300">Não foi possível carregar os dados.</p>
-        <p className="mt-2 text-sm text-slate-400">{error}</p>
-        <p className="mt-2 text-sm text-slate-500">Confirma que correste o supabase/schema.sql no teu projeto.</p>
+        <p className="font-semibold text-danger">Não foi possível carregar os dados.</p>
+        <p className="mt-2 text-sm text-muted">{error}</p>
+        <p className="mt-2 text-sm text-subtle">Confirma que correste o supabase/schema.sql no teu projeto.</p>
+        <button className="mt-6 mr-4 text-sm text-muted underline" onClick={() => db.signOut().then(() => go("/entrar"))}>
+          Sair
+        </button>
         <button className="mt-6 text-sm text-brand underline" onClick={refresh}>
           Tentar de novo
         </button>
       </div>
     );
+  if (subscription === undefined) return <Spinner />;
+  if (!db.isActive(subscription))
+    return <SubscriptionRequired subscription={subscription} email={session.user?.email} onRefresh={refresh} />;
   if (!data) return <Spinner />;
 
   const vehicleMatch = path.match(/^\/veiculos\/([^/]+)$/);

@@ -43,7 +43,7 @@ export default function Reminders() {
 
   return (
     <div className="space-y-4">
-      <p className="text-sm text-slate-400">
+      <p className="text-sm text-muted">
         Veículos com a revisão atrasada ou a menos de {fmtKm(data.workshop.warn_km)} / {data.workshop.warn_days} dias.
         O lembrete abre o WhatsApp com a mensagem já escrita e o link do histórico.
       </p>
@@ -55,7 +55,7 @@ export default function Reminders() {
           <button
             key={k}
             onClick={() => setTab(k)}
-            className={`rounded-full px-3 py-2 text-xs font-semibold ${tab === k ? "bg-brand text-white" : "bg-white/5 text-slate-400"}`}
+            className={`rounded-full px-3 py-2 text-xs font-semibold ${tab === k ? "bg-brand text-on-brand" : "bg-ink/5 text-muted"}`}
           >
             {l}
           </button>
@@ -78,13 +78,13 @@ export default function Reminders() {
                   <VehiclePhoto vehicle={v} className="h-14 w-20 shrink-0 rounded-lg" />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <Plate className="text-white">{v.plate}</Plate>
+                      <Plate className="text-ink">{v.plate}</Plate>
                       <StatusBadge status={st.status} />
                     </div>
-                    <p className="truncate text-sm text-slate-400">
+                    <p className="truncate text-sm text-muted">
                       {vehicleName(v)} · {c?.name || "sem proprietário"}
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-subtle">
                       Próxima: {[st.nextKm != null && fmtKm(st.nextKm), st.nextDate && fmtDate(st.nextDate)].filter(Boolean).join(" · ")}
                       {" · "}atual {fmtKm(v.current_km)}
                       {sentAt && ` · enviado a ${fmtDate(sentAt)}`}
@@ -106,7 +106,7 @@ export default function Reminders() {
                       </Button>
                     </>
                   ) : (
-                    <span className="rounded-xl bg-sky-500/10 px-3 py-2 text-xs text-sky-200">Sem WhatsApp registado</span>
+                    <span className="rounded-xl bg-info/10 px-3 py-2 text-xs text-info">Sem WhatsApp registado</span>
                   )}
                 </div>
               </div>

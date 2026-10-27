@@ -1,19 +1,33 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ImagePlus, Trash2, Check } from "lucide-react";
 import { useStore } from "../lib/store.js";
+import { SubscriptionPanel } from "./Account.jsx";
 import { resizeImage } from "../lib/util.js";
 import { Button, Field } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
+import ThemePicker from "../components/ThemePicker.jsx";
+import { applyTheme, normalizeTheme } from "../lib/theme.js";
 
-const COLORS = ["#f97316", "#dc2626", "#2563eb", "#16a34a", "#7c3aed", "#0891b2", "#db2777", "#ca8a04"];
+const themeOf = (ws) => normalizeTheme(ws.theme, ws.primary_color);
 
 export default function Settings() {
-  const { data, save } = useStore();
+  const { data, save, subscription } = useStore();
   const [w, setW] = useState(data.workshop);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
   const set = (k) => (e) => setW({ ...w, [k]: e.target.value });
   const num = (k) => (e) => setW({ ...w, [k]: parseInt(e.target.value.replace(/\D/g, ""), 10) || 0 });
+
+  // As cores mudam logo (pré-visualização); se sair sem guardar, volta às guardadas.
+  const saved = useRef(data.workshop);
+  saved.current = data.workshop;
+  useEffect(() => () => applyTheme(themeOf(saved.current)), []);
+
+  function setTheme(t) {
+    const { id, name, mode, bg, surface, ink, brand, accent } = t;
+    setW({ ...w, theme: { id, name, mode, bg, surface, ink, brand, accent }, primary_color: brand });
+    applyTheme(t);
+  }
 
   async function pickLogo(e) {
     const file = e.target.files?.[0];
@@ -37,19 +51,19 @@ export default function Settings() {
     <form onSubmit={submit} className="mx-auto max-w-2xl space-y-6">
       <section className="card space-y-4 p-5">
         <div>
-          <h2 className="font-bold text-white">A sua marca</h2>
-          <p className="text-sm text-slate-400">É isto que o cliente vê no histórico digital e nos cartões.</p>
+          <h2 className="font-bold text-ink">A sua marca</h2>
+          <p className="text-sm text-muted">É isto que o cliente vê no histórico digital e nos cartões.</p>
         </div>
         <div className="flex items-center gap-4">
           <Logo workshop={w} size={64} />
           <label className="cursor-pointer">
-            <span className="inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-200">
+            <span className="inline-flex items-center gap-2 rounded-xl border border-line bg-ink/5 px-3 py-2 text-sm text-ink-2">
               <ImagePlus size={16} /> {w.logo_url ? "Trocar logótipo" : "Carregar logótipo"}
             </span>
             <input type="file" accept="image/*" className="hidden" onChange={pickLogo} />
           </label>
           {w.logo_url && (
-            <button type="button" onClick={() => setW({ ...w, logo_url: "" })} className="text-slate-500 hover:text-red-300" aria-label="Remover logótipo">
+            <button type="button" onClick={() => setW({ ...w, logo_url: "" })} className="text-subtle hover:text-danger" aria-label="Remover logótipo">
               <Trash2 size={18} />
             </button>
           )}
@@ -71,36 +85,22 @@ export default function Settings() {
             <input className="input" value={w.address || ""} onChange={set("address")} />
           </Field>
         </div>
-        <div>
-          <span className="label">Cor principal</span>
-          <div className="flex flex-wrap items-center gap-2">
-            {COLORS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => setW({ ...w, primary_color: c })}
-                className="flex h-9 w-9 items-center justify-center rounded-full ring-offset-2 ring-offset-[#0b0d12]"
-                style={{ background: c, boxShadow: w.primary_color === c ? `0 0 0 2px #0b0d12, 0 0 0 4px ${c}` : "none" }}
-                aria-label={c}
-              >
-                {w.primary_color === c && <Check size={16} className="text-white" />}
-              </button>
-            ))}
-            <input
-              type="color"
-              value={w.primary_color}
-              onChange={set("primary_color")}
-              className="h-9 w-12 cursor-pointer rounded-lg border border-white/10 bg-transparent"
-              title="Outra cor"
-            />
-          </div>
-        </div>
       </section>
 
       <section className="card space-y-4 p-5">
         <div>
-          <h2 className="font-bold text-white">Revisões e lembretes</h2>
-          <p className="text-sm text-slate-400">
+          <h2 className="font-bold text-ink">Cores do painel e do portal</h2>
+          <p className="text-sm text-muted">
+            Escolha uma paleta ou crie a sua. Aplica-se ao painel, ao portal que o cliente vê e às etiquetas a cores.
+          </p>
+        </div>
+        <ThemePicker value={themeOf(w)} onChange={setTheme} />
+      </section>
+
+      <section className="card space-y-4 p-5">
+        <div>
+          <h2 className="font-bold text-ink">Revisões e lembretes</h2>
+          <p className="text-sm text-muted">
             Valores usados para sugerir a próxima revisão e para decidir quando um veículo está "a vencer".
           </p>
         </div>
@@ -125,6 +125,7 @@ export default function Settings() {
           {ok ? <Check size={16} /> : null} {ok ? "Guardado" : "Guardar alterações"}
         </Button>
       </div>
+      <SubscriptionPanel subscription={subscription} />
     </form>
   );
 }

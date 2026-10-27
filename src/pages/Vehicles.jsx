@@ -33,7 +33,7 @@ export default function Vehicles() {
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row">
         <div className="relative flex-1">
-          <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" size={18} />
+          <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-subtle" size={18} />
           <input className="input pl-10" placeholder="Pesquisar" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
         <div className="flex gap-1.5 overflow-x-auto">
@@ -42,7 +42,7 @@ export default function Vehicles() {
               key={k}
               onClick={() => setFilter(k)}
               className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${
-                filter === k ? "bg-brand text-white" : "bg-white/5 text-slate-400"
+                filter === k ? "bg-brand text-on-brand" : "bg-ink/5 text-muted"
               }`}
             >
               {l}
@@ -73,9 +73,9 @@ export default function Vehicles() {
                   <StatusBadge status={st.status} className="absolute top-2 right-2 !bg-black/60" />
                 </div>
                 <div className="space-y-1 p-3 text-sm">
-                  <p className="truncate font-medium text-white">{vehicleName(v) || "—"}</p>
-                  <p className="truncate text-slate-400">{c?.name || "Sem proprietário"}</p>
-                  <p className="flex justify-between text-xs text-slate-500">
+                  <p className="truncate font-medium text-ink">{vehicleName(v) || "—"}</p>
+                  <p className="truncate text-muted">{c?.name || "Sem proprietário"}</p>
+                  <p className="flex justify-between text-xs text-subtle">
                     <span>{fmtKm(v.current_km)}</span>
                     <span>
                       {st.count} serviço{st.count === 1 ? "" : "s"}

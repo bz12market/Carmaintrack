@@ -1,3 +1,5 @@
+import { getPortalPrefix } from "./router.js";
+
 export const FILTERS = ["Óleo", "Ar do motor", "Ar da cabine", "Combustível"];
 export const SERVICE_TITLES = ["Mudança de óleo", "Revisão", "Reparação", "Inspeção pré-IPO", "Outro"];
 
@@ -60,10 +62,10 @@ export function vehicleStatus(vehicle, services, workshop) {
 }
 
 export const STATUS = {
-  ok: { label: "Em dia", color: "#22c55e" },
-  soon: { label: "A vencer", color: "#eab308" },
-  overdue: { label: "Atrasado", color: "#ef4444" },
-  none: { label: "Sem revisão", color: "#64748b" },
+  ok: { label: "Em dia", color: "var(--c-ok)" },
+  soon: { label: "A vencer", color: "var(--c-warn)" },
+  overdue: { label: "Atrasado", color: "var(--c-danger)" },
+  none: { label: "Sem revisão", color: "var(--c-subtle)" },
 };
 
 /** Converte um número português/internacional para o formato do wa.me. */
@@ -81,7 +83,7 @@ export function waLink(phone, text) {
   return n ? `https://wa.me/${n}${q}` : `https://wa.me/${q}`;
 }
 
-export const portalUrl = (token) => `${window.location.origin}/v/${token}`;
+export const portalUrl = (token) => `${window.location.origin}${getPortalPrefix()}/v/${token}`;
 
 export function reminderText(vehicle, st, workshop, clientName) {
   const first = (clientName || "").split(" ")[0];

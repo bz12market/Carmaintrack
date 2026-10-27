@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "../lib/store.js";
-import { navigate } from "../lib/router.js";
+import { navigate, href } from "../lib/router.js";
 import { fmtDate, fmtKm, portalUrl, reminderText, shareText, vehicleName, waLink } from "../lib/util.js";
 import { Button, Field, Link, Modal, Plate, StatusBadge, VehiclePhoto, Empty } from "../components/ui.jsx";
 import History from "../components/History.jsx";
@@ -124,9 +124,9 @@ export default function VehicleDetail({ id }) {
   return (
     <div className="space-y-6">
       {labelHint && (
-        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-green-500/30 bg-green-500/10 p-4">
-          <Check className="text-green-400" size={20} />
-          <p className="flex-1 text-sm text-green-100">
+        <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-ok/30 bg-ok/10 p-4">
+          <Check className="text-ok" size={20} />
+          <p className="flex-1 text-sm text-ok">
             Serviço guardado. Imprima a etiqueta com a próxima revisão e cole-a no para-brisas antes de entregar o carro.
           </p>
           <Button onClick={() => navigate(`/cartoes?v=${v.id}`)}>
@@ -134,17 +134,17 @@ export default function VehicleDetail({ id }) {
           </Button>
           <button
             onClick={() => {
-              window.history.replaceState({}, "", `/veiculos/${v.id}`);
+              window.history.replaceState({}, "", href(`/veiculos/${v.id}`));
               setLabelHint(false);
             }}
-            className="rounded-lg p-1.5 text-green-200/70 hover:bg-white/10"
+            className="rounded-lg p-1.5 text-ok/70 hover:bg-ink/10"
             aria-label="Fechar"
           >
             <X size={18} />
           </button>
         </div>
       )}
-      <Link to="/veiculos" className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-white">
+      <Link to="/veiculos" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
         <ArrowLeft size={16} /> Clientes e veículos
       </Link>
 
@@ -154,7 +154,7 @@ export default function VehicleDetail({ id }) {
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
           <div className="absolute bottom-4 left-4">
             <Plate className="text-3xl text-white sm:text-4xl">{v.plate}</Plate>
-            <p className="text-slate-200">{vehicleName(v)}</p>
+            <p className="text-white/85">{vehicleName(v)}</p>
           </div>
           <StatusBadge status={st.status} className="absolute top-3 right-3 !bg-black/60" />
         </div>
@@ -163,8 +163,8 @@ export default function VehicleDetail({ id }) {
             <p className="label">Proprietário</p>
             {c ? (
               <button onClick={() => setModal({ type: "client" })} className="group text-left">
-                <p className="font-semibold text-white group-hover:underline">{c.name}</p>
-                <p className="text-sm text-slate-400">{c.phone || "sem telemóvel"}</p>
+                <p className="font-semibold text-ink group-hover:underline">{c.name}</p>
+                <p className="text-sm text-muted">{c.phone || "sem telemóvel"}</p>
               </button>
             ) : (
               <button onClick={() => openRecord(v)} className="text-sm text-brand underline">
@@ -174,19 +174,19 @@ export default function VehicleDetail({ id }) {
           </div>
           <div>
             <p className="label">Quilometragem atual</p>
-            <button onClick={() => setModal({ type: "km" })} className="flex items-center gap-2 font-semibold text-white hover:underline">
-              <Gauge size={16} className="text-slate-400" /> {fmtKm(v.current_km)}
+            <button onClick={() => setModal({ type: "km" })} className="flex items-center gap-2 font-semibold text-ink hover:underline">
+              <Gauge size={16} className="text-muted" /> {fmtKm(v.current_km)}
             </button>
           </div>
           <div>
             <p className="label">Próxima revisão</p>
-            <p className="flex items-center gap-2 font-semibold text-white">
-              <CalendarClock size={16} className="text-slate-400" />
+            <p className="flex items-center gap-2 font-semibold text-ink">
+              <CalendarClock size={16} className="text-muted" />
               {[st.nextKm != null && fmtKm(st.nextKm), st.nextDate && fmtDate(st.nextDate)].filter(Boolean).join(" · ") ||
                 "—"}
             </p>
             {st.status !== "none" && (
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-subtle">
                 {[
                   st.kmLeft != null && (st.kmLeft >= 0 ? `faltam ${fmtKm(st.kmLeft)}` : `passou ${fmtKm(-st.kmLeft)}`),
                   st.daysLeft != null && (st.daysLeft >= 0 ? `faltam ${st.daysLeft} dias` : `há ${-st.daysLeft} dias`),
@@ -197,7 +197,7 @@ export default function VehicleDetail({ id }) {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-2 border-t border-white/10 p-4">
+        <div className="flex flex-wrap gap-2 border-t border-line p-4">
           <Button onClick={() => openService(v.id)}>
             <Wrench size={16} /> Registar revisão
           </Button>
@@ -232,7 +232,7 @@ export default function VehicleDetail({ id }) {
       </section>
 
       <section>
-        <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-400 uppercase">
+        <h2 className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">
           Histórico de revisões · {st.count} registo{st.count === 1 ? "" : "s"}
         </h2>
         {st.count === 0 ? (
