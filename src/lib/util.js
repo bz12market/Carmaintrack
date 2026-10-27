@@ -1,6 +1,15 @@
 import { getPortalPrefix } from "./router.js";
 
-export const FILTERS = ["Óleo", "Ar do motor", "Ar da cabine", "Combustível"];
+export const FILTERS = ["Filtro de óleo", "Filtro de ar", "Filtro de habitáculo", "Filtro de combustível"];
+
+// Nomes usados antes; os serviços já guardados aparecem com os nomes novos.
+const OLD_FILTER_NAMES = {
+  "Óleo": "Filtro de óleo",
+  "Ar do motor": "Filtro de ar",
+  "Ar da cabine": "Filtro de habitáculo",
+  "Combustível": "Filtro de combustível",
+};
+export const filterNames = (filters) => [...new Set((filters || []).map((f) => OLD_FILTER_NAMES[f] || f))];
 export const SERVICE_TITLES = ["Mudança de óleo", "Revisão", "Reparação", "Inspeção pré-IPO", "Outro"];
 
 export const todayISO = () => new Date().toISOString().slice(0, 10);
