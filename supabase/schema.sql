@@ -13,7 +13,7 @@ create table if not exists workshops (
   name text not null default 'A minha oficina',
   tagline text,
   logo_url text,
-  primary_color text not null default '#f97316',
+  primary_color text not null default '#0f766e',
   phone text,
   whatsapp text,
   address text,
@@ -23,6 +23,9 @@ create table if not exists workshops (
   warn_days int not null default 30,
   created_at timestamptz not null default now()
 );
+
+-- Paleta de cores do painel e do portal (ver src/lib/theme.js).
+alter table workshops add column if not exists theme jsonb;
 
 create or replace function my_workshop_id() returns uuid
 language sql stable security definer set search_path = public as $$
@@ -161,7 +164,7 @@ begin
     'owner_name', owner_name,
     'workshop', json_build_object(
       'name', w.name, 'tagline', w.tagline, 'logo_url', w.logo_url,
-      'primary_color', w.primary_color, 'phone', w.phone, 'whatsapp', w.whatsapp,
+      'primary_color', w.primary_color, 'theme', w.theme, 'phone', w.phone, 'whatsapp', w.whatsapp,
       'address', w.address, 'warn_km', w.warn_km, 'warn_days', w.warn_days),
     'services', coalesce((
       select json_agg(json_build_object(

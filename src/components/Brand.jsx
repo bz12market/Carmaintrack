@@ -13,12 +13,12 @@ export function Brand({ size = 36, onClick }) {
       className="flex items-center gap-2.5"
     >
       <span
-        className="flex items-center justify-center rounded-xl bg-gradient-to-br from-orange-500 to-red-600"
+        className="flex items-center justify-center rounded-xl bg-gradient-to-br from-brand to-accent"
         style={{ width: size, height: size }}
       >
-        <Wrench className="text-white" size={size * 0.52} />
+        <Wrench className="text-on-brand" size={size * 0.52} />
       </span>
-      <span className="text-lg font-black tracking-tight text-white">Carmaintrack</span>
+      <span className="text-lg font-black tracking-tight text-ink">Carmaintrack</span>
     </a>
   );
 }
@@ -50,8 +50,8 @@ export function AuthShell({ title, subtitle, children }) {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
           <Brand size={44} />
-          {title && <h1 className="mt-2 text-xl font-bold text-white">{title}</h1>}
-          {subtitle && <p className="text-sm text-slate-400">{subtitle}</p>}
+          {title && <h1 className="mt-2 text-xl font-bold text-ink">{title}</h1>}
+          {subtitle && <p className="text-sm text-muted">{subtitle}</p>}
         </div>
         {children}
       </div>

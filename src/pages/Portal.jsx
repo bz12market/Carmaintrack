@@ -14,6 +14,7 @@ import {
   MapPin,
 } from "lucide-react";
 import { getPublicVehicle } from "../lib/db.js";
+import { applyTheme, normalizeTheme } from "../lib/theme.js";
 import { STATUS, fmtDate, fmtKm, vehicleName, vehicleStatus, waLink } from "../lib/util.js";
 import { Plate, VehiclePhoto } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
@@ -21,13 +22,13 @@ import History from "../components/History.jsx";
 
 function Tile({ icon: Icon, label, value }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-white/10 bg-[#111827]/80 px-4 py-4">
+    <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-4">
       <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/15">
         <Icon size={22} className="text-brand" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-semibold tracking-widest text-slate-500 uppercase">{label}</p>
-        <p className="font-semibold text-white">{value}</p>
+        <p className="text-[11px] font-semibold tracking-widest text-subtle uppercase">{label}</p>
+        <p className="font-semibold text-ink">{value}</p>
       </div>
     </div>
   );
@@ -43,23 +44,23 @@ export default function Portal({ token }) {
   }, [token]);
 
   useEffect(() => {
-    const color = state.data?.workshop?.primary_color;
-    if (color) document.documentElement.style.setProperty("--brand", color);
+    const w = state.data?.workshop;
+    if (w) applyTheme(normalizeTheme(w.theme, w.primary_color));
     if (state.data) document.title = `${state.data.vehicle.plate} · ${state.data.workshop.name}`;
   }, [state.data]);
 
   if (state.loading)
     return (
       <div className="flex min-h-dvh items-center justify-center">
-        <Loader2 className="animate-spin text-slate-500" size={32} />
+        <Loader2 className="animate-spin text-subtle" size={32} />
       </div>
     );
 
   if (!state.data)
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center p-6 text-center">
-        <p className="text-lg font-bold text-white">Histórico não encontrado</p>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="text-lg font-bold text-ink">Histórico não encontrado</p>
+        <p className="mt-1 text-sm text-muted">
           {state.error ? "Não foi possível carregar o histórico. Tente novamente." : "O link pode estar incorreto ou ter sido desativado."}
         </p>
       </div>
@@ -87,37 +88,37 @@ export default function Portal({ token }) {
   const StatusIcon = st.status === "ok" ? CheckCircle2 : st.status === "soon" ? Clock : AlertTriangle;
 
   return (
-    <div className="mx-auto min-h-dvh max-w-lg bg-gradient-to-b from-[#0b0d12] via-[#0b0d12] to-brand/10 pb-32">
+    <div className="mx-auto min-h-dvh max-w-lg bg-gradient-to-b from-bg via-bg to-brand/10 pb-32">
       <header className="flex items-center gap-3 px-4 py-3">
         <Logo workshop={w} size={40} />
         <div className="min-w-0">
-          <p className="truncate font-bold text-white">{w.name}</p>
-          <p className="truncate text-xs text-slate-400">{w.tagline || "Histórico de revisões"}</p>
+          <p className="truncate font-bold text-ink">{w.name}</p>
+          <p className="truncate text-xs text-muted">{w.tagline || "Histórico de revisões"}</p>
         </div>
       </header>
 
       <section className="relative">
         <VehiclePhoto vehicle={vehicle} className="h-64 w-full" />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#0b0d12] via-black/20 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-t from-bg via-bg/30 to-transparent" />
         <div className="absolute bottom-4 left-4">
-          <Plate className="text-4xl text-white drop-shadow-lg">{vehicle.plate}</Plate>
-          <p className="text-slate-200">{name}</p>
+          <Plate className="text-4xl text-ink drop-shadow-lg">{vehicle.plate}</Plate>
+          <p className="text-ink-2">{name}</p>
         </div>
       </section>
 
       <div className="space-y-3 px-4">
-        <section className="card divide-y divide-white/10 px-4">
-          {owner_name && <p className="py-3 text-slate-300">Proprietário: {owner_name}</p>}
+        <section className="card divide-y divide-line px-4">
+          {owner_name && <p className="py-3 text-ink-2">Proprietário: {owner_name}</p>}
           <div className="flex items-center justify-between py-3">
-            <span className="text-sm text-slate-400">Quilometragem atual</span>
-            <span className="text-xl font-bold text-white">{fmtKm(vehicle.current_km).replace(" km", "")}</span>
+            <span className="text-sm text-muted">Quilometragem atual</span>
+            <span className="text-xl font-bold text-ink">{fmtKm(vehicle.current_km).replace(" km", "")}</span>
           </div>
           <div className="flex items-center justify-between py-3">
-            <span className="text-sm text-slate-400">Revisões</span>
+            <span className="text-sm text-muted">Revisões</span>
             <span className="text-xl font-bold text-brand">{st.count}</span>
           </div>
           <div className="flex items-center justify-between py-3">
-            <span className="text-sm text-slate-400">Estado</span>
+            <span className="text-sm text-muted">Estado</span>
             <span className="flex items-center gap-1.5 text-xl font-bold" style={{ color: STATUS[st.status].color }}>
               <StatusIcon size={20} /> {STATUS[st.status].label}
             </span>
@@ -138,15 +139,18 @@ export default function Portal({ token }) {
         {(st.status === "overdue" || st.status === "soon") && (
           <section
             className="rounded-2xl border p-4"
-            style={{ borderColor: `${STATUS[st.status].color}55`, background: `${STATUS[st.status].color}14` }}
+            style={{
+              borderColor: `color-mix(in oklab, ${STATUS[st.status].color} 35%, transparent)`,
+              background: `color-mix(in oklab, ${STATUS[st.status].color} 8%, transparent)`,
+            }}
           >
             <div className="flex gap-3">
               <AlertTriangle size={28} className="shrink-0" style={{ color: STATUS[st.status].color }} />
               <div>
-                <p className="text-lg font-bold text-white">
+                <p className="text-lg font-bold text-ink">
                   {st.status === "overdue" ? "A sua revisão está atrasada" : "A sua revisão está a chegar"}
                 </p>
-                <p className="mt-1 text-sm text-slate-300">
+                <p className="mt-1 text-sm text-ink-2">
                   {st.status === "overdue"
                     ? "Recomendamos marcar a revisão o quanto antes para ajudar a proteger o motor."
                     : "Marque já a próxima visita e evite esquecimentos."}
@@ -170,22 +174,22 @@ export default function Portal({ token }) {
           <section className="flex gap-3 rounded-2xl border border-brand/30 bg-brand/10 p-4">
             <Zap size={22} className="shrink-0 text-brand" />
             <div>
-              <p className="text-sm text-slate-400">Próxima revisão recomendada</p>
+              <p className="text-sm text-muted">Próxima revisão recomendada</p>
               {nextLine && <p className="font-bold text-brand">{nextLine}</p>}
-              {dateLine && <p className="text-sm text-slate-300">{dateLine}</p>}
+              {dateLine && <p className="text-sm text-ink-2">{dateLine}</p>}
             </div>
           </section>
         )}
 
         {services.length > 0 && (
           <section className="pt-4">
-            <h2 className="mb-3 text-xs font-bold tracking-widest text-slate-500 uppercase">Histórico de revisões</h2>
+            <h2 className="mb-3 text-xs font-bold tracking-widest text-subtle uppercase">Histórico de revisões</h2>
             <History services={st.services} />
           </section>
         )}
 
-        <footer className="space-y-1 pt-6 text-center text-xs text-slate-500">
-          <p className="font-semibold text-slate-400">{w.name}</p>
+        <footer className="space-y-1 pt-6 text-center text-xs text-subtle">
+          <p className="font-semibold text-muted">{w.name}</p>
           {w.address && (
             <p className="flex items-center justify-center gap-1">
               <MapPin size={12} /> {w.address}
@@ -201,14 +205,14 @@ export default function Portal({ token }) {
             href={waLink(w.whatsapp || w.phone, `Olá! Sou cliente com o ${vehicle.plate}.`)}
             target="_blank"
             rel="noreferrer"
-            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-cyan-400 to-emerald-400 py-4 font-semibold text-white shadow-xl"
+            className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-[#25d366] py-4 font-semibold text-white shadow-xl"
           >
             <MessageCircle size={20} /> Enviar mensagem
           </a>
           {w.phone && (
             <a
               href={`tel:${w.phone.replace(/\s/g, "")}`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 font-semibold text-white shadow-xl"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-brand py-4 font-semibold text-on-brand shadow-xl"
             >
               <Phone size={20} /> Ligar
             </a>

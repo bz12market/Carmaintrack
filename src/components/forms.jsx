@@ -71,7 +71,7 @@ export function RecordForm({ vehicle, onClose }) {
     <Modal title={editing ? "Editar veículo" : "Novo registo"} onClose={onClose} wide>
       <form onSubmit={submit} className="space-y-6">
         <section className="space-y-3">
-          <h3 className="text-sm font-bold text-white">Cliente</h3>
+          <h3 className="text-sm font-bold text-ink">Cliente</h3>
           {data.clients.length > 0 && (
             <div className="flex gap-2">
               {[
@@ -83,7 +83,7 @@ export function RecordForm({ vehicle, onClose }) {
                   type="button"
                   onClick={() => setClientMode(k)}
                   className={`rounded-full px-3 py-1.5 text-xs font-semibold ${
-                    clientMode === k ? "bg-brand text-white" : "bg-white/5 text-slate-300"
+                    clientMode === k ? "bg-brand text-on-brand" : "bg-ink/5 text-ink-2"
                   }`}
                 >
                   {l}
@@ -136,7 +136,7 @@ export function RecordForm({ vehicle, onClose }) {
         </section>
 
         <section className="space-y-3">
-          <h3 className="text-sm font-bold text-white">Veículo</h3>
+          <h3 className="text-sm font-bold text-ink">Veículo</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Matrícula">
               <input
@@ -162,14 +162,14 @@ export function RecordForm({ vehicle, onClose }) {
             <Field label="Fotografia (opcional)">
               <label className="input flex cursor-pointer items-center gap-3">
                 <VehiclePhoto vehicle={v} className="h-8 w-12 rounded-md" />
-                <span className="flex items-center gap-1.5 text-slate-300">
+                <span className="flex items-center gap-1.5 text-ink-2">
                   <ImagePlus size={16} /> {v.photo_url ? "Trocar" : "Escolher"}
                 </span>
                 <input type="file" accept="image/*" className="hidden" onChange={pickPhoto} />
               </label>
             </Field>
           </div>
-          <label className="flex items-center gap-2 text-sm text-slate-300">
+          <label className="flex items-center gap-2 text-sm text-ink-2">
             <input
               type="checkbox"
               checked={v.reminders_enabled !== false}
@@ -180,7 +180,7 @@ export function RecordForm({ vehicle, onClose }) {
           </label>
         </section>
 
-        {err && <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</p>}
+        {err && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{err}</p>}
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>
@@ -286,13 +286,13 @@ export function ServiceForm({ vehicleId, service, onClose }) {
                 ))}
             </select>
             {data.vehicles.length === 0 && (
-              <p className="mt-2 text-xs text-slate-400">Ainda não há veículos. Cria primeiro um "Novo registo".</p>
+              <p className="mt-2 text-xs text-muted">Ainda não há veículos. Cria primeiro um "Novo registo".</p>
             )}
           </Field>
         ) : (
           vehicle && (
-            <p className="text-sm text-slate-400">
-              <span className="font-plate font-bold text-white">{vehicle.plate}</span> · {vehicleName(vehicle)}
+            <p className="text-sm text-muted">
+              <span className="font-plate font-bold text-ink">{vehicle.plate}</span> · {vehicleName(vehicle)}
             </p>
           )
         )}
@@ -338,8 +338,8 @@ export function ServiceForm({ vehicleId, service, onClose }) {
                 onClick={() => toggleFilter(f)}
                 className={`rounded-full border px-3 py-1.5 text-sm ${
                   s.filters.includes(f)
-                    ? "border-brand bg-brand/20 text-white"
-                    : "border-white/10 bg-white/5 text-slate-400"
+                    ? "border-brand bg-brand/20 text-ink"
+                    : "border-line bg-ink/5 text-muted"
                 }`}
               >
                 {f}
@@ -371,7 +371,7 @@ export function ServiceForm({ vehicleId, service, onClose }) {
                 />
                 <button
                   type="button"
-                  className="rounded-xl px-2 text-slate-500 hover:text-red-300"
+                  className="rounded-xl px-2 text-subtle hover:text-danger"
                   onClick={() => setS({ ...s, extras: s.extras.filter((_, j) => j !== i) })}
                   aria-label="Remover"
                 >
@@ -395,8 +395,8 @@ export function ServiceForm({ vehicleId, service, onClose }) {
 
         <div className="rounded-2xl border border-brand/30 bg-brand/5 p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h3 className="text-sm font-bold text-white">Próxima revisão</h3>
-            <label className="flex items-center gap-2 text-xs text-slate-400">
+            <h3 className="text-sm font-bold text-ink">Próxima revisão</h3>
+            <label className="flex items-center gap-2 text-xs text-muted">
               <input
                 type="checkbox"
                 checked={autoNext}
@@ -431,10 +431,10 @@ export function ServiceForm({ vehicleId, service, onClose }) {
               />
             </Field>
           </div>
-          <p className="mt-2 text-xs text-slate-500">Vence pelo que chegar primeiro. Deixa um dos campos vazio para usar só o outro.</p>
+          <p className="mt-2 text-xs text-subtle">Vence pelo que chegar primeiro. Deixa um dos campos vazio para usar só o outro.</p>
         </div>
 
-        {err && <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-300">{err}</p>}
+        {err && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{err}</p>}
 
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={onClose}>

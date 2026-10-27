@@ -22,6 +22,7 @@ import {
 import { api } from "../lib/db.js";
 import { PLAN_FEATURES, TRIAL_DAYS, enabledPlans } from "../config/plans.js";
 import Label, { LABEL_SIZES } from "../components/Label.jsx";
+import { MARKETING_THEME, themeVars } from "../lib/theme.js";
 import { Brand, GoLink } from "../components/Brand.jsx";
 
 const DEMO_TOKEN = "demo0000000000000000001a";
@@ -32,9 +33,9 @@ function Section({ id, eyebrow, title, intro, children, className = "" }) {
       <div className="mx-auto max-w-6xl">
         {(eyebrow || title) && (
           <div className="mx-auto mb-12 max-w-2xl text-center">
-            {eyebrow && <p className="mb-3 text-xs font-bold tracking-[0.2em] text-orange-400 uppercase">{eyebrow}</p>}
-            {title && <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">{title}</h2>}
-            {intro && <p className="mt-4 text-lg text-slate-400">{intro}</p>}
+            {eyebrow && <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">{eyebrow}</p>}
+            {title && <h2 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">{title}</h2>}
+            {intro && <p className="mt-4 text-lg text-muted">{intro}</p>}
           </div>
         )}
         {children}
@@ -47,7 +48,7 @@ function PrimaryCta({ children, onClick, className = "" }) {
   return (
     <button
       onClick={onClick}
-      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-red-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-orange-900/40 transition hover:brightness-110 ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-2xl bg-brand px-6 py-3.5 font-bold text-on-brand shadow-lg shadow-brand/25 transition hover:brightness-110 ${className}`}
     >
       {children}
     </button>
@@ -58,7 +59,7 @@ function SecondaryCta({ to, children }) {
   return (
     <GoLink
       to={to}
-      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/15 bg-white/5 px-6 py-3.5 font-semibold text-white hover:bg-white/10"
+      className="inline-flex items-center justify-center gap-2 rounded-2xl border border-line bg-ink/5 px-6 py-3.5 font-semibold text-ink hover:bg-ink/10"
     >
       {children}
     </GoLink>
@@ -67,7 +68,7 @@ function SecondaryCta({ to, children }) {
 
 function PhoneFrame({ src, alt, className = "" }) {
   return (
-    <div className={`rounded-[2.2rem] border-[6px] border-slate-800 bg-black p-1 shadow-2xl shadow-black/60 ${className}`}>
+    <div className={`rounded-[2.2rem] border-[6px] border-ink/85 bg-ink p-1 shadow-2xl shadow-ink/25 ${className}`}>
       <img src={src} alt={alt} className="w-full rounded-[1.7rem]" loading="lazy" />
     </div>
   );
@@ -99,19 +100,19 @@ function Checkout({ plan, label, className = "" }) {
       <PrimaryCta onClick={start} className="w-full">
         {busy ? "A abrir o pagamento…" : label}
       </PrimaryCta>
-      {error && <p className="mt-2 text-center text-sm text-red-300">{error}</p>}
+      {error && <p className="mt-2 text-center text-sm text-danger">{error}</p>}
     </div>
   );
 }
 
 function Faq({ q, children }) {
   return (
-    <details className="group rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4 open:bg-white/[0.05]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-white">
+    <details className="group rounded-2xl border border-line bg-ink/[0.03] px-5 py-4 open:bg-ink/[0.05]">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-ink">
         {q}
-        <ChevronDown size={18} className="shrink-0 text-slate-400 transition group-open:rotate-180" />
+        <ChevronDown size={18} className="shrink-0 text-muted transition group-open:rotate-180" />
       </summary>
-      <div className="mt-3 text-slate-400">{children}</div>
+      <div className="mt-3 text-muted">{children}</div>
     </details>
   );
 }
@@ -123,37 +124,36 @@ export default function Landing() {
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   useEffect(() => {
-    document.documentElement.style.setProperty("--brand", "#f97316");
     document.title = "Carmaintrack — Histórico digital e etiquetas QR para oficinas";
     const hash = window.location.hash.slice(1);
     if (hash) requestAnimationFrame(() => document.getElementById(hash)?.scrollIntoView());
   }, []);
 
   return (
-    <div className="overflow-x-hidden bg-[#08090d]">
+    <div className="theme-scope min-h-dvh overflow-x-hidden bg-bg text-ink" style={themeVars(MARKETING_THEME)}>
       {/* Navegação */}
-      <header className="sticky top-0 z-40 border-b border-white/5 bg-[#08090d]/80 backdrop-blur">
+      <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
           <Brand onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} />
-          <nav className="hidden flex-1 gap-6 text-sm text-slate-400 md:flex">
+          <nav className="hidden flex-1 gap-6 text-sm text-muted md:flex">
             {[
               ["como", "Como funciona"],
               ["funcionalidades", "Funcionalidades"],
               ["precos", "Preços"],
               ["faq", "Perguntas"],
             ].map(([id, l]) => (
-              <button key={id} onClick={() => scrollTo(id)} className="hover:text-white">
+              <button key={id} onClick={() => scrollTo(id)} className="hover:text-ink">
                 {l}
               </button>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2">
-            <GoLink to="/entrar" className="px-2 py-2 text-sm font-semibold whitespace-nowrap text-slate-300 hover:text-white sm:px-3">
+            <GoLink to="/entrar" className="px-2 py-2 text-sm font-semibold whitespace-nowrap text-ink-2 hover:text-ink sm:px-3">
               Entrar
             </GoLink>
             <GoLink
               to="/demo"
-              className="rounded-xl bg-white px-4 py-2 text-sm font-bold whitespace-nowrap text-slate-900 hover:bg-orange-50"
+              className="rounded-xl bg-ink px-4 py-2 text-sm font-bold whitespace-nowrap text-bg hover:bg-ink/85"
             >
               Ver demo
             </GoLink>
@@ -163,19 +163,19 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative px-4 pt-14 pb-20 sm:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgba(249,115,22,0.22),transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--brand)_20%,transparent),transparent_60%)]" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
           <div>
-            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-3 py-1 text-xs font-semibold text-orange-300">
+            <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">
               <Wrench size={13} /> Para oficinas e centros de mudança de óleo
             </p>
-            <h1 className="text-4xl leading-[1.05] font-black tracking-tight text-white sm:text-6xl">
+            <h1 className="text-4xl leading-[1.05] font-black tracking-tight text-ink sm:text-6xl">
               O carro sai da oficina.{" "}
-              <span className="bg-gradient-to-r from-orange-400 to-red-500 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-brand to-accent bg-clip-text text-transparent">
                 A sua oficina fica com ele.
               </span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-slate-300">
+            <p className="mt-6 max-w-xl text-lg text-ink-2">
               Registe cada revisão, cole uma etiqueta com QR no para-brisas e o cliente passa a ter no telemóvel o
               histórico do carro, a próxima revisão e o seu contacto. Sem papel e sem aplicações para instalar.
             </p>
@@ -185,10 +185,10 @@ export default function Landing() {
               </PrimaryCta>
               <SecondaryCta to="/demo">Ver a demonstração</SecondaryCta>
             </div>
-            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-slate-400">
+            <ul className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-sm text-muted">
               {["Sem fidelização", "Matrículas e km portugueses", "Funciona no telemóvel e no computador"].map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
-                  <Check size={15} className="text-green-400" /> {t}
+                  <Check size={15} className="text-brand" /> {t}
                 </li>
               ))}
             </ul>
@@ -197,7 +197,7 @@ export default function Landing() {
             <img
               src="/screens/painel.jpg"
               alt="Painel da oficina no Carmaintrack"
-              className="w-full rounded-2xl border border-white/10 shadow-2xl shadow-black/60"
+              className="w-full rounded-2xl border border-line shadow-2xl shadow-ink/20"
             />
             <PhoneFrame
               src="/screens/portal.jpg"
@@ -213,7 +213,7 @@ export default function Landing() {
         eyebrow="O problema"
         title="Fazer um bom trabalho já não chega para o cliente voltar"
         intro="Depois da entrega, a informação dispersa-se e a sua oficina desaparece da memória do cliente."
-        className="bg-white/[0.02]"
+        className="bg-ink/[0.02]"
       >
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -222,10 +222,10 @@ export default function Landing() {
             [UserX, "A marca perde-se", "Na próxima revisão o cliente vai onde estiver mais perto, não onde foi bem servido."],
             [ClipboardList, "Tudo na cabeça do dono", "Cada pessoa anota à sua maneira e encontrar uma revisão antiga demora."],
           ].map(([Icon, t, d]) => (
-            <div key={t} className="rounded-2xl border border-white/10 bg-[#0e1016] p-5">
-              <Icon className="text-red-400" size={24} />
-              <h3 className="mt-4 font-bold text-white">{t}</h3>
-              <p className="mt-1.5 text-sm text-slate-400">{d}</p>
+            <div key={t} className="rounded-2xl border border-line bg-surface p-5">
+              <Icon className="text-danger" size={24} />
+              <h3 className="mt-4 font-bold text-ink">{t}</h3>
+              <p className="mt-1.5 text-sm text-muted">{d}</p>
             </div>
           ))}
         </div>
@@ -239,40 +239,40 @@ export default function Landing() {
             [Printer, "Cole a etiqueta", "Imprima a etiqueta com QR numa impressora de etiquetas ou em folhas A4 e cole-a no para-brisas."],
             [Bell, "O cliente volta", "Ele lê o QR e vê tudo no telemóvel. Quando a revisão se aproxima, envia-lhe um lembrete pelo WhatsApp."],
           ].map(([Icon, t, d], i) => (
-            <div key={t} className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.06] to-transparent p-6">
-              <span className="absolute top-5 right-6 text-5xl font-black text-white/5">{i + 1}</span>
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600">
-                <Icon className="text-white" size={22} />
+            <div key={t} className="relative rounded-3xl border border-line bg-gradient-to-b from-ink/[0.04] to-transparent p-6">
+              <span className="absolute top-5 right-6 text-5xl font-black text-ink/5">{i + 1}</span>
+              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-brand to-accent">
+                <Icon className="text-ink" size={22} />
               </span>
-              <h3 className="mt-5 text-lg font-bold text-white">{t}</h3>
-              <p className="mt-2 text-slate-400">{d}</p>
+              <h3 className="mt-5 text-lg font-bold text-ink">{t}</h3>
+              <p className="mt-2 text-muted">{d}</p>
             </div>
           ))}
         </div>
       </Section>
 
       {/* Etiqueta */}
-      <Section className="bg-white/[0.02]">
+      <Section className="bg-ink/[0.02]">
         <div className="grid items-center gap-12 lg:grid-cols-2">
           <div>
-            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-orange-400 uppercase">A etiqueta</p>
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Cada carro sai com a sua etiqueta QR</h2>
-            <p className="mt-4 text-lg text-slate-400">
+            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">A etiqueta</p>
+            <h2 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Cada carro sai com a sua etiqueta QR</h2>
+            <p className="mt-4 text-lg text-muted">
               Substitui o autocolante da mudança de óleo. Mostra a matrícula, a próxima revisão e o nome da sua oficina,
               e o QR abre o histórico completo.
             </p>
-            <ul className="mt-6 space-y-3 text-slate-300">
+            <ul className="mt-6 space-y-3 text-ink-2">
               {[
                 "Impressoras térmicas de 4\" (100 mm), Brother QL, Niimbot ou folhas A4",
                 "Versão a preto e branco para térmicas e versão a cores",
                 "Logótipo, cor e contactos da sua oficina",
               ].map((t) => (
                 <li key={t} className="flex gap-2.5">
-                  <Check size={18} className="mt-0.5 shrink-0 text-green-400" /> {t}
+                  <Check size={18} className="mt-0.5 shrink-0 text-brand" /> {t}
                 </li>
               ))}
             </ul>
-            <p className="mt-6 flex items-center gap-2 text-sm text-slate-500">
+            <p className="mt-6 flex items-center gap-2 text-sm text-subtle">
               <ScanLine size={16} /> Leia o QR com o telemóvel para ver um exemplo do histórico.
             </p>
           </div>
@@ -305,12 +305,12 @@ export default function Landing() {
             <PhoneFrame src="/screens/portal-historico.jpg" alt="Histórico de revisões no portal" className="mt-12 w-[46%] max-w-[260px]" />
           </div>
           <div className="order-1 lg:order-2">
-            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-orange-400 uppercase">O que o cliente vê</p>
-            <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">A sua oficina, sempre no telemóvel do cliente</h2>
-            <p className="mt-4 text-lg text-slate-400">
+            <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">O que o cliente vê</p>
+            <h2 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">A sua oficina, sempre no telemóvel do cliente</h2>
+            <p className="mt-4 text-lg text-muted">
               Um link ou um QR e pronto: abre no navegador, sem registos nem instalações.
             </p>
-            <ul className="mt-6 space-y-3 text-slate-300">
+            <ul className="mt-6 space-y-3 text-ink-2">
               {[
                 "Quilometragem, estado e próxima revisão em destaque",
                 "Óleo e filtros usados, com o histórico completo em linha do tempo",
@@ -318,7 +318,7 @@ export default function Landing() {
                 "Botões para marcar pelo WhatsApp ou ligar para a oficina",
               ].map((t) => (
                 <li key={t} className="flex gap-2.5">
-                  <Check size={18} className="mt-0.5 shrink-0 text-green-400" /> {t}
+                  <Check size={18} className="mt-0.5 shrink-0 text-brand" /> {t}
                 </li>
               ))}
             </ul>
@@ -327,7 +327,7 @@ export default function Landing() {
       </Section>
 
       {/* Funcionalidades */}
-      <Section id="funcionalidades" eyebrow="Tudo num só sítio" title="Mais do que um histórico" className="bg-white/[0.02]">
+      <Section id="funcionalidades" eyebrow="Tudo num só sítio" title="Mais do que um histórico" className="bg-ink/[0.02]">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {[
             [Users, "Clientes e veículos", "Procure por matrícula, nome ou telefone e encontre tudo num instante."],
@@ -339,10 +339,10 @@ export default function Landing() {
             [Palette, "A sua marca", "Logótipo, cor principal, telefone, WhatsApp e morada."],
             [Smartphone, "Telemóvel e computador", "Use no balcão, na oficina ou em casa, no aparelho que já tem."],
           ].map(([Icon, t, d]) => (
-            <div key={t} className="rounded-2xl border border-white/10 bg-[#0e1016] p-5">
-              <Icon className="text-orange-400" size={22} />
-              <h3 className="mt-3 font-bold text-white">{t}</h3>
-              <p className="mt-1 text-sm text-slate-400">{d}</p>
+            <div key={t} className="rounded-2xl border border-line bg-surface p-5">
+              <Icon className="text-brand" size={22} />
+              <h3 className="mt-3 font-bold text-ink">{t}</h3>
+              <p className="mt-1 text-sm text-muted">{d}</p>
             </div>
           ))}
         </div>
@@ -351,22 +351,22 @@ export default function Landing() {
       {/* Comparação */}
       <Section eyebrow="A diferença" title="Papel e WhatsApp resolvem metade. O Carmaintrack junta tudo.">
         <div className="mx-auto grid max-w-4xl gap-4 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-[#0e1016] p-6">
-            <h3 className="font-bold text-slate-300">Como é hoje</h3>
-            <ul className="mt-4 space-y-3 text-slate-400">
+          <div className="rounded-3xl border border-line bg-surface p-6">
+            <h3 className="font-bold text-ink-2">Como é hoje</h3>
+            <ul className="mt-4 space-y-3 text-muted">
               {["O autocolante perde-se ou fica ilegível", "O histórico está espalhado em conversas e cadernos", "Depende da memória do cliente", "A oficina desaparece depois da entrega"].map((t) => (
                 <li key={t} className="flex gap-2.5">
-                  <X size={18} className="mt-0.5 shrink-0 text-red-400" /> {t}
+                  <X size={18} className="mt-0.5 shrink-0 text-danger" /> {t}
                 </li>
               ))}
             </ul>
           </div>
-          <div className="rounded-3xl border border-orange-500/40 bg-gradient-to-b from-orange-500/15 to-transparent p-6">
-            <h3 className="font-bold text-white">Com o Carmaintrack</h3>
-            <ul className="mt-4 space-y-3 text-slate-200">
+          <div className="rounded-3xl border border-brand/40 bg-gradient-to-b from-brand/10 to-surface p-6">
+            <h3 className="font-bold text-ink">Com o Carmaintrack</h3>
+            <ul className="mt-4 space-y-3 text-ink-2">
               {["Etiqueta com QR que leva ao histórico", "Tudo guardado por veículo e fácil de encontrar", "Próxima revisão visível e lembretes", "A sua marca e contactos sempre à mão do cliente"].map((t) => (
                 <li key={t} className="flex gap-2.5">
-                  <Check size={18} className="mt-0.5 shrink-0 text-green-400" /> {t}
+                  <Check size={18} className="mt-0.5 shrink-0 text-brand" /> {t}
                 </li>
               ))}
             </ul>
@@ -380,29 +380,29 @@ export default function Landing() {
         eyebrow="Preços"
         title="Um preço simples, sem surpresas"
         intro={TRIAL_DAYS > 0 ? `Experimente ${TRIAL_DAYS} dias sem pagar. Se não gostar, cancela antes e não paga nada.` : undefined}
-        className="bg-white/[0.02]"
+        className="bg-ink/[0.02]"
       >
         <div className={`mx-auto grid max-w-3xl gap-6 ${plans.length > 1 ? "md:grid-cols-2" : "max-w-md"}`}>
           {plans.map((plan) => (
             <div
               key={plan.id}
               className={`relative rounded-3xl border p-7 ${
-                plan === mainPlan ? "border-orange-500/50 bg-gradient-to-b from-orange-500/15 to-[#0e1016]" : "border-white/10 bg-[#0e1016]"
+                plan === mainPlan ? "border-brand/50 bg-gradient-to-b from-brand/10 to-surface shadow-xl shadow-brand/10" : "border-line bg-surface"
               }`}
             >
               {plan === mainPlan && plans.length > 1 && (
-                <span className="absolute -top-3 left-7 rounded-full bg-orange-500 px-3 py-1 text-xs font-bold text-white">Mais escolhido</span>
+                <span className="absolute -top-3 left-7 rounded-full bg-accent px-3 py-1 text-xs font-bold text-on-accent">Mais escolhido</span>
               )}
-              <h3 className="text-lg font-bold text-white">{plan.name}</h3>
+              <h3 className="text-lg font-bold text-ink">{plan.name}</h3>
               <p className="mt-4 flex items-end gap-1">
-                <span className="text-5xl font-black text-white">{plan.price}</span>
-                <span className="mb-1.5 text-slate-400">{plan.period}</span>
+                <span className="text-5xl font-black text-ink">{plan.price}</span>
+                <span className="mb-1.5 text-muted">{plan.period}</span>
               </p>
-              <p className="mt-1 text-sm text-slate-500">{plan.note}</p>
-              <ul className="mt-6 space-y-2.5 text-slate-300">
+              <p className="mt-1 text-sm text-subtle">{plan.note}</p>
+              <ul className="mt-6 space-y-2.5 text-ink-2">
                 {PLAN_FEATURES.map((f) => (
                   <li key={f} className="flex gap-2.5">
-                    <Check size={18} className="mt-0.5 shrink-0 text-green-400" /> {f}
+                    <Check size={18} className="mt-0.5 shrink-0 text-brand" /> {f}
                   </li>
                 ))}
               </ul>
@@ -410,7 +410,7 @@ export default function Landing() {
             </div>
           ))}
         </div>
-        <p className="mt-6 text-center text-sm text-slate-500">
+        <p className="mt-6 text-center text-sm text-subtle">
           Pagamento seguro com cartão ou débito direto SEPA através do Stripe. A conta é criada logo a seguir ao pagamento.
         </p>
       </Section>
@@ -445,29 +445,39 @@ export default function Landing() {
 
       {/* CTA final */}
       <section className="px-4 pb-24">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-[2rem] border border-orange-500/30 bg-gradient-to-br from-orange-500/25 via-red-600/10 to-transparent p-10 text-center sm:p-14">
-          <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">Transforme a próxima revisão no primeiro histórico digital</h2>
-          <p className="mx-auto mt-4 max-w-xl text-lg text-slate-300">Comece hoje. Em cinco minutos tem a oficina configurada e a primeira etiqueta impressa.</p>
-          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-            <PrimaryCta onClick={() => scrollTo("precos")}>
+        <div className="relative mx-auto max-w-5xl overflow-hidden rounded-[2rem] bg-ink p-10 text-center sm:p-14">
+          <div className="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-brand/40 blur-3xl" />
+          <h2 className="relative text-3xl font-black tracking-tight text-bg sm:text-4xl">Transforme a próxima revisão no primeiro histórico digital</h2>
+          <p className="relative mx-auto mt-4 max-w-xl text-lg text-bg/75">Comece hoje. Em cinco minutos tem a oficina configurada e a primeira etiqueta impressa.</p>
+          <div className="relative mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+            <button
+              onClick={() => scrollTo("precos")}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-accent px-6 py-3.5 font-bold text-on-accent hover:brightness-105"
+            >
               {trial} <ArrowRight size={18} />
-            </PrimaryCta>
-            <SecondaryCta to="/demo">Ver a demonstração</SecondaryCta>
+            </button>
+            <GoLink
+              to="/demo"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-bg/25 px-6 py-3.5 font-semibold text-bg hover:bg-bg/10"
+            >
+              Ver a demonstração
+            </GoLink>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-white/5 px-4 py-10">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-slate-500 sm:flex-row">
+      <footer className="border-t border-line/60 px-4 py-10">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-sm text-subtle sm:flex-row">
           <Brand size={28} onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} />
           <div className="flex gap-5">
-            <GoLink to="/demo" className="hover:text-white">
+            <GoLink to="/demo" className="hover:text-ink">
               Demonstração
             </GoLink>
-            <GoLink to="/entrar" className="hover:text-white">
+            <GoLink to="/entrar" className="hover:text-ink">
               Entrar
             </GoLink>
-            <button onClick={() => scrollTo("precos")} className="hover:text-white">
+            <button onClick={() => scrollTo("precos")} className="hover:text-ink">
               Preços
             </button>
           </div>

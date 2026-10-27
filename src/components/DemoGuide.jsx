@@ -37,11 +37,11 @@ export default function DemoGuide() {
   ].filter(Boolean);
 
   return (
-    <div className="demo-guide no-print border-b border-amber-400/20 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-transparent">
+    <div className="demo-guide no-print border-b border-brand/25 bg-gradient-to-r from-brand/15 via-accent/10 to-transparent">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 text-sm">
-        <p className="flex items-center gap-2 font-semibold text-amber-200">
+        <p className="flex items-center gap-2 font-semibold text-brand">
           <Sparkles size={16} /> Demonstração
-          <span className="hidden font-normal text-amber-100/70 sm:inline">· dados fictícios, guardados só neste browser</span>
+          <span className="hidden font-normal text-muted sm:inline">· dados fictícios, guardados só neste browser</span>
         </p>
         <div className="ml-auto flex items-center gap-2">
           <button
@@ -51,14 +51,14 @@ export default function DemoGuide() {
                 window.location.reload();
               }
             }}
-            className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-amber-100/70 hover:bg-white/10"
+            className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs text-muted hover:bg-ink/10"
           >
             <RotateCcw size={13} /> Repor
           </button>
-          <GoLink to="/#precos" className="rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-slate-900 hover:bg-amber-50">
+          <GoLink to="/#precos" className="rounded-lg bg-brand px-3 py-1.5 text-xs font-bold text-on-brand hover:brightness-110">
             Subscrever
           </GoLink>
-          <button onClick={toggle} className="rounded-lg p-1 text-amber-100/70 hover:bg-white/10" aria-label="Mostrar/esconder guia">
+          <button onClick={toggle} className="rounded-lg p-1 text-muted hover:bg-ink/10" aria-label="Mostrar/esconder guia">
             {open ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
           </button>
         </div>
@@ -68,9 +68,9 @@ export default function DemoGuide() {
               <li key={s.label} className="shrink-0">
                 <button
                   onClick={s.run}
-                  className="flex items-center gap-2 rounded-full border border-white/10 bg-black/30 py-1 pr-3 pl-1 text-xs text-white hover:border-amber-300/50"
+                  className="flex items-center gap-2 rounded-full border border-line bg-surface py-1 pr-3 pl-1 text-xs text-ink hover:border-brand/50"
                 >
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-400 text-[11px] font-bold text-black">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand text-[11px] font-bold text-on-brand">
                     {i + 1}
                   </span>
                   {s.label}

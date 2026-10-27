@@ -58,7 +58,7 @@ export default function Login() {
           </Field>
         )}
         {msg && (
-          <p className={`rounded-xl px-3 py-2 text-sm ${msg.ok ? "bg-green-500/10 text-green-300" : "bg-red-500/10 text-red-300"}`}>
+          <p className={`rounded-xl px-3 py-2 text-sm ${msg.ok ? "bg-ok/10 text-ok" : "bg-danger/10 text-danger"}`}>
             {msg.text}
           </p>
         )}
@@ -71,12 +71,12 @@ export default function Login() {
             setMode(mode === "login" ? "reset" : "login");
             setMsg(null);
           }}
-          className="w-full text-center text-sm text-slate-400 hover:text-white"
+          className="w-full text-center text-sm text-muted hover:text-ink"
         >
           {mode === "login" ? "Esqueci-me da palavra-passe" : "Voltar ao login"}
         </button>
       </form>
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm text-muted">
         Ainda não é cliente?{" "}
         <GoLink to="/#precos" className="font-semibold text-brand hover:underline">
           Ver planos

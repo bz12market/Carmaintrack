@@ -4,6 +4,7 @@ import * as db from "./lib/db.js";
 import { go, setArea, usePath } from "./lib/router.js";
 import { StoreContext } from "./lib/store.js";
 import { vehicleStatus } from "./lib/util.js";
+import { applyTheme, normalizeTheme } from "./lib/theme.js";
 import Layout from "./components/Layout.jsx";
 import { RecordForm, ServiceForm } from "./components/forms.jsx";
 import Login from "./pages/Login.jsx";
@@ -56,7 +57,7 @@ export default function App() {
 function Spinner() {
   return (
     <div className="flex min-h-dvh items-center justify-center">
-      <Loader2 className="animate-spin text-slate-500" size={32} />
+      <Loader2 className="animate-spin text-subtle" size={32} />
     </div>
   );
 }
@@ -101,9 +102,8 @@ function AdminApp({ path, url }) {
   }, [userId, refresh]);
 
   useEffect(() => {
-    if (data?.workshop?.primary_color)
-      document.documentElement.style.setProperty("--brand", data.workshop.primary_color);
-  }, [data?.workshop?.primary_color]);
+    if (data?.workshop) applyTheme(normalizeTheme(data.workshop.theme, data.workshop.primary_color));
+  }, [data?.workshop?.theme, data?.workshop?.primary_color]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const save = useCallback(async (table, row) => {
     const saved = await db.saveRow(table, row);
@@ -154,10 +154,10 @@ function AdminApp({ path, url }) {
   if (error)
     return (
       <div className="mx-auto max-w-md p-6 pt-24 text-center">
-        <p className="font-semibold text-red-300">Não foi possível carregar os dados.</p>
-        <p className="mt-2 text-sm text-slate-400">{error}</p>
-        <p className="mt-2 text-sm text-slate-500">Confirma que correste o supabase/schema.sql no teu projeto.</p>
-        <button className="mt-6 mr-4 text-sm text-slate-400 underline" onClick={() => db.signOut().then(() => go("/entrar"))}>
+        <p className="font-semibold text-danger">Não foi possível carregar os dados.</p>
+        <p className="mt-2 text-sm text-muted">{error}</p>
+        <p className="mt-2 text-sm text-subtle">Confirma que correste o supabase/schema.sql no teu projeto.</p>
+        <button className="mt-6 mr-4 text-sm text-muted underline" onClick={() => db.signOut().then(() => go("/entrar"))}>
           Sair
         </button>
         <button className="mt-6 text-sm text-brand underline" onClick={refresh}>

@@ -27,7 +27,7 @@ function Choice({ value, onChange, options }) {
           key={k}
           type="button"
           onClick={() => onChange(k)}
-          className={`rounded-full px-3 py-1.5 text-xs font-semibold ${value === k ? "bg-brand text-white" : "bg-white/5 text-slate-300"}`}
+          className={`rounded-full px-3 py-1.5 text-xs font-semibold ${value === k ? "bg-brand text-on-brand" : "bg-ink/5 text-ink-2"}`}
         >
           {l}
         </button>
@@ -101,7 +101,7 @@ export default function Cards() {
       <style>{`@media print { ${pageCss} }`}</style>
 
       <div className="print:hidden space-y-5">
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted">
           Cada veículo tem um código QR único que abre o seu histórico digital. Imprima a etiqueta e cole-a no interior do
           para-brisas, em vez do autocolante de papel, ou entregue-a como cartão.
         </p>
@@ -154,7 +154,7 @@ export default function Cards() {
               />
             </div>
           </div>
-          <p className="flex gap-2 rounded-xl bg-sky-500/10 p-3 text-xs text-sky-200 lg:col-span-2">
+          <p className="flex gap-2 rounded-xl bg-info/10 p-3 text-xs text-info lg:col-span-2">
             <Info size={16} className="shrink-0" />
             {prefs.paper === "roll"
               ? `Na janela de impressão escolha a impressora de etiquetas, papel ${size.w} × ${size.h} mm, margens "Nenhuma", escala 100% e desative "Cabeçalhos e rodapés".`
@@ -165,25 +165,25 @@ export default function Cards() {
 
         <div className="flex flex-col gap-2 sm:flex-row">
           <div className="relative flex-1">
-            <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-slate-500" size={18} />
+            <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-subtle" size={18} />
             <input className="input pl-10" placeholder="Pesquisar" value={q} onChange={(e) => setQ(e.target.value)} />
           </div>
           <button
             type="button"
             onClick={() => window.print()}
             disabled={toPrint.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-on-brand disabled:opacity-50"
           >
             <Printer size={16} /> Imprimir {toPrint.length || ""} etiqueta{toPrint.length === 1 ? "" : "s"}
           </button>
         </div>
 
-        <div className="card divide-y divide-white/5">
+        <div className="card divide-y divide-line">
           {list.map((v) => (
-            <label key={v.id} className="flex cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-white/[0.03]">
+            <label key={v.id} className="flex cursor-pointer items-center gap-3 px-4 py-2.5 hover:bg-ink/[0.03]">
               <input type="checkbox" checked={selected.has(v.id)} onChange={() => toggle(v.id)} className="accent-[var(--brand)]" />
-              <Plate className="text-white">{v.plate}</Plate>
-              <span className="flex-1 truncate text-sm text-slate-400">
+              <Plate className="text-ink">{v.plate}</Plate>
+              <span className="flex-1 truncate text-sm text-muted">
                 {vehicleName(v)} · {clientOf(v)?.name || "—"}
               </span>
               <button
@@ -192,7 +192,7 @@ export default function Cards() {
                   e.preventDefault();
                   download(v);
                 }}
-                className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10"
+                className="rounded-lg p-1.5 text-muted hover:bg-ink/10"
                 title="Descarregar QR (PNG)"
               >
                 <Download size={16} />
@@ -203,7 +203,7 @@ export default function Cards() {
 
         {chosen.length > 0 && (
           <div>
-            <h2 className="mb-3 text-sm font-bold tracking-wide text-slate-400 uppercase">Pré-visualização (tamanho real)</h2>
+            <h2 className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">Pré-visualização (tamanho real)</h2>
             <div className="flex flex-wrap gap-4 overflow-x-auto rounded-2xl bg-slate-200 p-4">
               {chosen.map((v) => (
                 <Label key={v.id} vehicle={v} workshop={data.workshop} status={statuses[v.id]} size={size} mode={prefs.mode} />

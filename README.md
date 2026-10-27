@@ -79,9 +79,15 @@ define `STRIPE_PRICE_ANUAL` e muda `enabled` para `true`.
 
   Na janela de impressão, escolhe a impressora e o papel com o mesmo tamanho,
   margens "Nenhuma", escala 100% e desativa "Cabeçalhos e rodapés".
-- **Personalizar**: logótipo, nome, slogan, cor principal, telefone,
-  WhatsApp e morada. Define ainda o intervalo padrão de revisão (km/meses) e
-  os limites de aviso (km/dias). Mostra também o estado da subscrição.
+- **Personalizar**: logótipo, nome, slogan, telefone, WhatsApp e morada;
+  intervalo padrão de revisão (km/meses) e limites de aviso (km/dias); estado
+  da subscrição.
+- **Cores**, também em Personalizar: 7 paletas predefinidas (Petróleo,
+  Oceano, Ameixa e Areia, claras; Grafite, Floresta e Meia-noite, escuras) ou
+  uma paleta personalizada (modo claro/escuro, cor principal, cor secundária,
+  fundo, cartões e texto), com pré-visualização imediata e aviso de pouco
+  contraste. A paleta fica guardada na oficina e aplica-se ao painel, ao
+  portal do cliente e às etiquetas a cores.
 
 **Portal do cliente** (`/v/<código>`): é público, não precisa de login nem de
 instalar nada, e mostra a marca da oficina. Inclui:
@@ -180,6 +186,7 @@ on conflict (user_id) do update set status = 'active';
     ├── config/plans.js      planos e preços mostrados na landing page
     ├── lib/db.js            Supabase ou modo demonstração (localStorage)
     ├── lib/util.js          cálculo do estado da revisão, WhatsApp, formatos
+    ├── lib/theme.js         paletas de cores e identidade da landing page
     ├── components/          layout, formulários, timeline, UI base
     └── pages/               Landing, Registo, Login, Início, Veículos, Ficha,
                              Lembretes, Etiquetas, Personalizar e Portal
