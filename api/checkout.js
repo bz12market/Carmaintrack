@@ -2,7 +2,7 @@
 // Depois do pagamento, o Stripe volta a /registo?session_id=..., onde a conta
 // é criada (api/register.js). Não há registo sem passar por aqui.
 import { TRIAL_DAYS } from "../src/config/plans.js";
-import { appOrigin, getStripe, handle, json, priceFor, readJson } from "./_lib.js";
+import { appOrigin, env, getStripe, handle, json, priceFor, readJson } from "./_lib.js";
 
 export const POST = handle(async (request) => {
   const body = await readJson(request);
@@ -11,7 +11,8 @@ export const POST = handle(async (request) => {
 
   const session = await getStripe().checkout.sessions.create({
     mode: "subscription",
-    line_items: [{ price, quantity: 1 }],
+    // Taxa de IVA do Stripe (tipo "exclusive"): os preços são sem IVA.
+    line_items: [{ price, quantity: 1, ...(env("STRIPE_TAX_RATE_ID") ? { tax_rates: [env("STRIPE_TAX_RATE_ID")] } : {}) }],
     success_url: `${origin}/registo?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${origin}/#precos`,
     locale: "pt",

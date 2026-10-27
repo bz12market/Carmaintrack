@@ -35,9 +35,11 @@ Supabase e Stripe, publicada na Vercel.
    Stripe para ver faturas, trocar o cartão ou cancelar.
 7. Quem cancelou e volta a pagar com o mesmo email recupera a conta e os dados.
 
-Os preços mostrados estão em `src/config/plans.js` (o valor cobrado é o do
-preço criado no Stripe). Para ativar o plano anual, cria o preço no Stripe,
-define `STRIPE_PRICE_ANUAL` e muda `enabled` para `true`.
+Planos: **mensal a 11,98 € + IVA** e **anual a 115 € + IVA** (20% de
+desconto face a 12 × 11,98 € = 143,76 €), ambos com 14 dias grátis. Os textos
+mostrados estão em `src/config/plans.js`; o valor cobrado é o do preço criado
+no Stripe, sem IVA, e o IVA é acrescentado pela taxa `STRIPE_TAX_RATE_ID`.
+Para desligar um plano, muda `enabled` para `false`.
 
 ## O que faz
 
@@ -131,7 +133,8 @@ As funções de pagamento (`/api/...`) só correm com a Vercel CLI:
 | `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → Secret key |
 | `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → o teu endpoint → Signing secret |
 | `STRIPE_PRICE_MENSAL` | Stripe → Product catalog → o produto → o preço mensal (`price_...`) |
-| `STRIPE_PRICE_ANUAL` | (opcional) o preço anual |
+| `STRIPE_PRICE_ANUAL` | o preço anual (`price_...`) |
+| `STRIPE_TAX_RATE_ID` | Stripe → Product catalog → Tax rates → IVA 23% (`txr_...`) |
 | `APP_URL` | (opcional) o endereço público, se usares domínio próprio |
 
 Depois de mudar variáveis, faz **Redeploy** da produção.
@@ -158,17 +161,20 @@ on conflict (user_id) do update set status = 'active';
 
 ### Stripe
 
-1. **Product catalog → Add product**: "Carmaintrack", preço recorrente
-   **mensal** em EUR. Copia o id do preço (`price_...`).
-2. **Developers → Webhooks → Add endpoint**:
+1. **Product catalog → Add product**: "Carmaintrack", com dois preços
+   recorrentes em EUR, **sem IVA**: 11,98 € **mensal** e 115,00 € **anual**.
+   Copia o id de cada preço (`price_...`).
+2. **Product catalog → Tax rates → New**: "IVA", 23%, Portugal, tipo
+   **Exclusive** (o IVA soma-se ao preço). Copia o id (`txr_...`).
+3. **Developers → Webhooks → Add endpoint**:
    `https://<endereço>/api/stripe-webhook`, com os eventos
    `customer.subscription.created`, `customer.subscription.updated` e
    `customer.subscription.deleted`. Copia o **Signing secret**.
-3. **Settings → Billing → Customer portal**: ativa o portal (cancelar
+4. **Settings → Billing → Customer portal**: ativa o portal (cancelar
    subscrição, atualizar método de pagamento, ver faturas).
-4. **Settings → Payment methods**: ativa os métodos que queres aceitar
+5. **Settings → Payment methods**: ativa os métodos que queres aceitar
    (cartão e débito direto SEPA funcionam com subscrições).
-5. Testa primeiro em **modo de teste** (chaves `sk_test_...`, cartão
+6. Testa primeiro em **modo de teste** (chaves `sk_test_...`, cartão
    `4242 4242 4242 4242`) e só depois muda para as chaves reais.
 
 ## Próximas fases (ainda não incluídas)
