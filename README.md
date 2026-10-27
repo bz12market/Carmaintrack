@@ -1,8 +1,7 @@
 # Revisa
 
 Histórico digital e lembretes de revisão para oficinas e centros de mudança
-de óleo. É uma app separada do AutoTechPro, com o mesmo stack: Vite, React,
-Tailwind e Supabase.
+de óleo. Feita com Vite, React, Tailwind e Supabase.
 
 "Revisa" é um nome provisório. Para o trocar, altera-o em `index.html`,
 `src/pages/Login.jsx` e neste README.
@@ -68,7 +67,6 @@ adivinhável. O portal só recebe os dados desse veículo, através da função
 ## Experimentar já (modo demonstração)
 
 ```bash
-cd revisa
 npm install
 npm run dev
 ```
@@ -81,8 +79,7 @@ Exemplo de portal: http://localhost:5174/v/demo0000000000000000001a
 
 ## Pôr a funcionar a sério (Supabase)
 
-1. Cria um projeto em https://supabase.com. Pode ser um projeto novo,
-   separado do AutoTechPro.
+1. Cria um projeto em https://supabase.com.
 2. Em **SQL Editor**, corre o conteúdo de `supabase/schema.sql`.
 3. Em **Authentication → URL Configuration**, define o **Site URL** com o
    endereço onde a app vai ficar (por exemplo, `https://revisa.vercel.app`).
@@ -95,8 +92,8 @@ oficina só vê os seus próprios clientes, veículos e serviços.
 
 ## Deploy (Vercel)
 
-1. Na Vercel, cria um projeto a partir deste repositório e define o **Root
-   Directory** como `revisa`.
+1. Na Vercel, cria um projeto a partir deste repositório. O preset **Vite**
+   é detetado automaticamente.
 2. Adiciona as variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
 3. O `vercel.json` já reencaminha todas as rotas para o `index.html`, para
    que os links `/v/...` funcionem.
@@ -110,13 +107,13 @@ oficina só vê os seus próprios clientes, veículos e serviços.
 ## Estrutura
 
 ```
-revisa/
+.
 ├── supabase/schema.sql      tabelas, RLS e função do portal público
 └── src/
     ├── App.jsx              autenticação, estado global e rotas
     ├── lib/db.js            Supabase ou modo demonstração (localStorage)
     ├── lib/util.js          cálculo do estado da revisão, WhatsApp, formatos
     ├── components/          layout, formulários, timeline, UI base
-    └── pages/               Início, Veículos, Ficha, Lembretes, Cartões,
+    └── pages/               Início, Veículos, Ficha, Lembretes, Etiquetas,
                              Personalizar, Login e Portal do cliente
 ```
