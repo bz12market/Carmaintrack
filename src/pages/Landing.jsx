@@ -130,7 +130,7 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="theme-scope min-h-dvh overflow-x-hidden bg-bg text-ink" style={themeVars(MARKETING_THEME)}>
+    <div className="min-h-dvh overflow-x-hidden bg-bg text-ink" style={themeVars(MARKETING_THEME)}>
       {/* Navegação */}
       <header className="sticky top-0 z-40 border-b border-line/60 bg-bg/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
@@ -163,7 +163,7 @@ export default function Landing() {
 
       {/* Hero */}
       <section className="relative px-4 pt-14 pb-20 sm:pt-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,color-mix(in_oklab,var(--brand)_20%,transparent),transparent_60%)]" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-[600px] bg-[radial-gradient(ellipse_at_top,rgb(var(--brand-rgb)/0.2),transparent_60%)]" />
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[1.05fr_1fr]">
           <div>
             <p className="mb-4 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 text-xs font-semibold text-brand">

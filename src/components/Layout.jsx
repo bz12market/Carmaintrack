@@ -72,7 +72,7 @@ export default function Layout({ path, email, children }) {
             <Icon size={18} />
             <span className="flex-1">{label}</span>
             {badge && alerts > 0 && (
-              <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">{alerts}</span>
+              <span className="rounded-full bg-[#ef4444] px-2 py-0.5 text-xs font-bold text-white">{alerts}</span>
             )}
           </Link>
         ))}
