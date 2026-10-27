@@ -253,7 +253,7 @@ export default function Landing() {
 
       {/* Etiqueta */}
       <Section className="bg-ink/[0.02]">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
+        <div className="grid items-center gap-12 lg:grid-cols-[1fr_auto]">
           <div>
             <p className="mb-3 text-xs font-bold tracking-[0.2em] text-brand uppercase">A etiqueta</p>
             <h2 className="text-3xl font-black tracking-tight text-ink sm:text-4xl">Cada carro sai com a sua etiqueta QR</h2>
@@ -264,7 +264,7 @@ export default function Landing() {
             <ul className="mt-6 space-y-3 text-ink-2">
               {[
                 "Impressoras térmicas de 4\" (100 mm), Brother QL, Niimbot ou folhas A4",
-                "Versão a preto e branco para térmicas e versão a cores",
+                "Na horizontal ou na vertical, a preto e branco para térmicas ou a cores",
                 "Logótipo, cor e contactos da sua oficina",
               ].map((t) => (
                 <li key={t} className="flex gap-2.5">
@@ -276,23 +276,17 @@ export default function Landing() {
               <ScanLine size={16} /> Leia o QR com o telemóvel para ver um exemplo do histórico.
             </p>
           </div>
-          <div className="flex flex-col items-center gap-5">
-            <div className="origin-center scale-[0.85] sm:scale-100">
-              <Label
-                {...SAMPLE}
-                size={LABEL_SIZES[0]}
-                mode="color"
-                qrUrl={`${window.location.origin}/demo/v/${DEMO_TOKEN}`}
-              />
+          <div className="flex flex-wrap items-center justify-center gap-5 lg:flex-nowrap">
+            <div className="flex flex-col items-center gap-5">
+              <Label {...SAMPLE} size={LABEL_SIZES[0]} mode="color" qrUrl={`${window.location.origin}/demo/v/${DEMO_TOKEN}`} />
+              <Label {...SAMPLE} size={LABEL_SIZES[0]} mode="mono" qrUrl={`${window.location.origin}/demo/v/${DEMO_TOKEN}`} />
             </div>
-            <div className="origin-center scale-[0.85] sm:scale-100">
-              <Label
-                {...SAMPLE}
-                size={LABEL_SIZES[0]}
-                mode="mono"
-                qrUrl={`${window.location.origin}/demo/v/${DEMO_TOKEN}`}
-              />
-            </div>
+            <Label
+              {...SAMPLE}
+              size={LABEL_SIZES.find((s) => s.id === "50x80")}
+              mode="color"
+              qrUrl={`${window.location.origin}/demo/v/${DEMO_TOKEN}`}
+            />
           </div>
         </div>
       </Section>
@@ -426,7 +420,8 @@ export default function Landing() {
           </Faq>
           <Faq q="Que impressora preciso para as etiquetas?">
             Qualquer uma. Funciona com impressoras térmicas de etiquetas de 4&quot; (100 mm), Brother QL (62 mm), impressoras
-            portáteis tipo Niimbot (50×30 mm) ou com uma impressora normal em folhas A4 de autocolantes.
+            portáteis tipo Niimbot (50×30 ou 40×60 mm) ou com uma impressora normal em folhas A4 de autocolantes. Há
+            tamanhos na horizontal e na vertical.
           </Faq>
           <Faq q="A próxima revisão pode ser por quilómetros ou por data?">
             Pelas duas: vence a que chegar primeiro. Os intervalos e os avisos ajustam-se nas definições.

@@ -73,8 +73,11 @@ define `STRIPE_PRICE_ANUAL` e muda `enabled` para `true`.
     porque as térmicas só imprimem a preto) ou *A cores*.
   - **Papel**: *Rolo de etiquetas* (uma página por etiqueta, com o tamanho
     exato) ou *Folha A4 de autocolantes*.
-  - **Tamanho**: 100×60 e 100×50 mm (térmicas de 4"), 85×55 mm (cartão),
-    62×29 mm (Brother QL) e 50×30 mm (portáteis, tipo Niimbot).
+  - **Tamanho**, na horizontal: 100×60 e 100×50 mm (térmicas de 4"),
+    85×55 mm (cartão), 62×29 mm (Brother QL) e 50×30 mm (portáteis, tipo
+    Niimbot); na vertical: 60×100 e 50×80 mm (térmicas), 62×100 mm (Brother
+    QL), 55×85 mm (cartão) e 40×60 mm (portáteis). As verticais têm a marca
+    no topo, a matrícula, o QR ao centro e a próxima revisão em baixo.
   - **Cópias** por veículo, e descarregar só o QR em PNG.
 
   Na janela de impressão, escolhe a impressora e o papel com o mesmo tamanho,
