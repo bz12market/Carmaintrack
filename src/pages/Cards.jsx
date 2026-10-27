@@ -204,7 +204,7 @@ export default function Cards() {
         {chosen.length > 0 && (
           <div>
             <h2 className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">Pré-visualização (tamanho real)</h2>
-            <div className="flex flex-wrap gap-4 overflow-x-auto rounded-2xl bg-slate-200 p-4">
+            <div className="flex flex-wrap gap-4 overflow-x-auto rounded-2xl bg-[#e2e8f0] p-4">
               {chosen.map((v) => (
                 <Label key={v.id} vehicle={v} workshop={data.workshop} status={statuses[v.id]} size={size} mode={prefs.mode} />
               ))}
