@@ -3,8 +3,21 @@ import { demoSeed } from "./demoSeed.js";
 
 // Sem as variáveis do Supabase a app corre em "modo demonstração": os dados
 // ficam guardados no localStorage deste browser, sem login.
-const url = import.meta.env.VITE_SUPABASE_URL;
-const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// O URL tem de ser só a origem do projeto (https://xxxx.supabase.co). Se for
+// colado com um caminho (p.ex. ".../rest/v1/"), o Supabase responde
+// "Invalid path specified in request URL", por isso fica só a origem.
+function projectUrl(raw) {
+  const value = (raw || "").trim();
+  if (!value) return "";
+  try {
+    return new URL(value).origin;
+  } catch {
+    return value;
+  }
+}
+
+const url = projectUrl(import.meta.env.VITE_SUPABASE_URL);
+const key = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
 
 export const isDemo = !url || !key;
 export const supabase = isDemo ? null : createClient(url, key);
