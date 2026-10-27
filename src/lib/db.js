@@ -17,9 +17,11 @@ function projectUrl(raw) {
 const url = projectUrl(import.meta.env.VITE_SUPABASE_URL);
 const key = (import.meta.env.VITE_SUPABASE_ANON_KEY || "").trim();
 
-// Link de recuperação da palavra-passe: o Supabase limpa o URL ao arrancar,
-// por isso isto é lido antes de criar o cliente.
-export const recoveryFromUrl = typeof window !== "undefined" && /type=recovery/.test(window.location.hash);
+// Links dos emails do Supabase que pedem para definir a palavra-passe:
+// "recovery" (esqueci-me) e "invite" (boas-vindas depois de subscrever).
+// O Supabase limpa o URL ao arrancar, por isso isto é lido antes de criar o cliente.
+export const passwordLinkType =
+  typeof window !== "undefined" ? (window.location.hash.match(/type=(recovery|invite)/) || [])[1] || null : null;
 
 /** Há um projeto Supabase configurado (produção). */
 export const isConfigured = !!url && !!key;

@@ -26,8 +26,11 @@ async function openBillingPortal(setMsg) {
   }
 }
 
-/** Nova palavra-passe, depois do link de recuperação enviado por email. */
-export function SetPassword({ onDone }) {
+/**
+ * Definir a palavra-passe depois de um link enviado por email: recuperação
+ * ou, com `welcome`, o convite de boas-vindas enviado depois de subscrever.
+ */
+export function SetPassword({ onDone, welcome = false }) {
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
@@ -44,9 +47,12 @@ export function SetPassword({ onDone }) {
     }
   }
   return (
-    <AuthShell title="Definir nova palavra-passe">
+    <AuthShell
+      title={welcome ? "Bem-vindo ao Carmaintrack" : "Definir nova palavra-passe"}
+      subtitle={welcome ? "A sua subscrição está ativa. Escolha uma palavra-passe para entrar no painel." : undefined}
+    >
       <form onSubmit={submit} className="card space-y-4 p-5">
-        <Field label="Nova palavra-passe (mín. 8 caracteres)">
+        <Field label={`${welcome ? "Palavra-passe" : "Nova palavra-passe"} (mín. 8 caracteres)`}>
           <input className="input" type="password" autoComplete="new-password" autoFocus value={password} onChange={(e) => setPassword(e.target.value)} />
         </Field>
         {msg && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{msg}</p>}

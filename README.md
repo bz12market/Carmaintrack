@@ -23,6 +23,11 @@ Supabase e Stripe, publicada na Vercel.
    confirma que o pagamento está concluído e que a subscrição está ativa, e
    só então cria a conta com o email usado no pagamento. A pessoa escolhe a
    palavra-passe e entra logo.
+   Ao mesmo tempo, o webhook (`checkout.session.completed`) garante a conta:
+   se ainda não existir, cria-a por convite e o Supabase envia o email de
+   boas-vindas com o link para definir a palavra-passe. Assim, quem fechar o
+   browser depois de pagar não perde o acesso. Enquanto ninguém entrar nessa
+   conta, a página de registo continua a poder definir a palavra-passe.
 3. Não há outra forma de criar conta: o login não tem "Criar conta" e o
    registo público do Supabase deve ficar desligado (ver abaixo).
 4. O Stripe avisa `api/stripe-webhook.js` de renovações, falhas de pagamento
@@ -147,8 +152,17 @@ Depois de mudar variáveis, faz **Redeploy** da produção.
    sign up**. As contas passam a ser criadas só pelo servidor, depois do
    pagamento.
 3. Em **Authentication → URL Configuration**, define o **Site URL** e junta
-   `<endereço>/**` em **Redirect URLs** (usado no email de recuperação da
-   palavra-passe).
+   `<endereço>/**` em **Redirect URLs** (usado nos emails de boas-vindas e
+   de recuperação da palavra-passe).
+4. Em **Authentication → Emails → Templates**, cola os modelos em português
+   de `supabase/email-templates/`:
+   - **Invite user**: assunto "Bem-vindo ao Carmaintrack: defina a sua
+     palavra-passe", corpo `convite.html`;
+   - **Reset password**: assunto "Carmaintrack: nova palavra-passe", corpo
+     `recuperar-palavra-passe.html`.
+5. Em **Authentication → Emails → SMTP Settings**, liga um serviço de envio
+   (Brevo, Resend, ...). O envio incluído no Supabase só serve para testes:
+   envia muito poucos emails por hora.
 
 Para dar acesso sem pagamento (a tua própria conta, ou uma oficina de
 teste), corre no SQL Editor:
@@ -168,8 +182,10 @@ on conflict (user_id) do update set status = 'active';
    **Exclusive** (o IVA soma-se ao preço). Copia o id (`txr_...`).
 3. **Developers → Webhooks → Add endpoint**:
    `https://<endereço>/api/stripe-webhook`, com os eventos
-   `customer.subscription.created`, `customer.subscription.updated` e
-   `customer.subscription.deleted`. Copia o **Signing secret**.
+   `checkout.session.completed`, `customer.subscription.created`,
+   `customer.subscription.updated` e `customer.subscription.deleted`. Copia o
+   **Signing secret**. (No painel novo do Stripe: Workbench → Webhooks →
+   Add destination.)
 4. **Settings → Billing → Customer portal**: ativa o portal (cancelar
    subscrição, atualizar método de pagamento, ver faturas).
 5. **Settings → Payment methods**: ativa os métodos que queres aceitar
