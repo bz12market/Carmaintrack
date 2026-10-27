@@ -4,7 +4,7 @@ import { Printer, Download, Search, Info } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { portalUrl, vehicleName } from "../lib/util.js";
 import { Empty, Plate } from "../components/ui.jsx";
-import Label, { LABEL_SIZES } from "../components/Label.jsx";
+import Label, { LABEL_SIZES, isVertical } from "../components/Label.jsx";
 
 // As opções de impressão dependem da impressora deste computador,
 // por isso ficam guardadas no browser e não na conta.
@@ -135,10 +135,17 @@ export default function Cards() {
             <div>
               <span className="label">Tamanho da etiqueta</span>
               <select className="input" value={prefs.size} onChange={(e) => setPrefs({ size: e.target.value })}>
-                {LABEL_SIZES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name} — {s.hint}
-                  </option>
+                {[
+                  ["Horizontais", LABEL_SIZES.filter((s) => !isVertical(s))],
+                  ["Verticais", LABEL_SIZES.filter(isVertical)],
+                ].map(([group, sizes]) => (
+                  <optgroup key={group} label={group}>
+                    {sizes.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {s.hint}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
             </div>
