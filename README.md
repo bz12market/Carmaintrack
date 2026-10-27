@@ -9,7 +9,7 @@ Supabase e Stripe, publicada na Vercel.
 | Endereço | O que é |
 |---|---|
 | `/` | Landing page com a apresentação e os preços |
-| `/demo` | Demonstração com dados fictícios e um guia de 5 passos (sem login) |
+| `/demo` | Demonstração com dados fictícios e um guia de 5 passos (sem login). Os dados ficam só no browser, recomeçam a cada visita (sair e voltar, ou separador novo) e apagam-se ao fim de 48 h; podem acrescentar-se 3 veículos (e 3 clientes) e 5 revisões aos exemplos (`DEMO_EXTRA` em `src/lib/db.js`) |
 | `/entrar` | Login das oficinas, com "Esqueci-me da palavra-passe" |
 | `/registo` | Página de regresso do pagamento, onde se cria a conta |
 | `/app` | Painel da oficina (login **e** subscrição ativa) |

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, ImagePlus } from "lucide-react";
 import { useStore } from "../lib/store.js";
+import { DEMO_LIMITS, demoLimitMessage, isDemo } from "../lib/db.js";
 import { navigate } from "../lib/router.js";
 import {
   FILTERS,
@@ -41,6 +42,12 @@ export function RecordForm({ vehicle, onClose }) {
     const dup = data.vehicles.find((x) => normalizePlate(x.plate) === plate && x.id !== vehicle?.id);
     if (dup) return setErr(`Já existe um veículo com a matrícula ${plate}.`);
     if (clientMode === "new" && !client.name.trim()) return setErr("Indica o nome do cliente.");
+    // Na demo, verifica os limites antes de gravar (para não ficar um cliente sem veículo).
+    if (isDemo && !editing) {
+      if (data.vehicles.length >= DEMO_LIMITS.vehicles) return setErr(demoLimitMessage("vehicles"));
+      if (clientMode === "new" && data.clients.length >= DEMO_LIMITS.clients)
+        return setErr(`${demoLimitMessage("clients")} Também pode escolher um cliente existente.`);
+    }
 
     setBusy(true);
     try {
