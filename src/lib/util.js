@@ -62,10 +62,10 @@ export function vehicleStatus(vehicle, services, workshop) {
 }
 
 export const STATUS = {
-  ok: { label: "Em dia", color: "var(--c-ok)" },
-  soon: { label: "A vencer", color: "var(--c-warn)" },
-  overdue: { label: "Atrasado", color: "var(--c-danger)" },
-  none: { label: "Sem revisão", color: "var(--c-subtle)" },
+  ok: { label: "Em dia", color: "var(--c-ok)", rgb: "var(--c-ok-rgb)" },
+  soon: { label: "A vencer", color: "var(--c-warn)", rgb: "var(--c-warn-rgb)" },
+  overdue: { label: "Atrasado", color: "var(--c-danger)", rgb: "var(--c-danger-rgb)" },
+  none: { label: "Sem revisão", color: "var(--c-subtle)", rgb: "var(--c-subtle-rgb)" },
 };
 
 /** Converte um número português/internacional para o formato do wa.me. */

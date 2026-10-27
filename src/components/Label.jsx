@@ -61,7 +61,7 @@ export default function Label({ vehicle, workshop, status, size, mode = "color",
         color: fg,
         background: mono
           ? "#fff"
-          : "linear-gradient(135deg, #15161b 0%, color-mix(in srgb, var(--brand) 38%, #15161b) 100%)",
+          : "linear-gradient(135deg, rgb(var(--brand-rgb) / 0) 0%, rgb(var(--brand-rgb) / 0.38) 100%), #15161b",
         border: mono ? `${mm(0.4)} solid #000` : "none",
         borderRadius: mm(2.5 * u),
         fontFamily: "Inter, system-ui, sans-serif",

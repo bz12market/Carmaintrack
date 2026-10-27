@@ -65,18 +65,54 @@ export function contrast(a, b) {
 /** Texto (branco ou quase preto) que se lê melhor sobre `hex`. */
 export const readableOn = (hex) => (contrast(hex, "#ffffff") >= contrast(hex, "#111111") ? "#ffffff" : "#111111");
 
-/** Variáveis CSS de um tema (para aplicar à página ou a um elemento). */
-export function themeVars(t) {
+const toRgb = (hex) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+const toHex = (rgb) => `#${rgb.map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`;
+
+/** Mistura `a` com `b` (t = peso de `a`, de 0 a 1). */
+function mix(a, b, t) {
+  const [x, y] = [toRgb(a), toRgb(b)];
+  return toHex(x.map((c, i) => c * t + y[i] * (1 - t)));
+}
+
+/**
+ * Todas as cores de um tema, já calculadas. As derivadas são calculadas aqui
+ * (e não com color-mix() em CSS) para funcionarem em browsers mais antigos.
+ */
+export function themeColors(t) {
   return {
-    "--c-bg": t.bg,
-    "--c-surface": t.surface,
-    "--c-ink": t.ink,
-    "--brand": t.brand,
-    "--c-accent": t.accent,
-    "--c-on-brand": readableOn(t.brand),
-    "--c-on-accent": readableOn(t.accent),
-    colorScheme: t.mode,
+    bg: t.bg,
+    surface: t.surface,
+    ink: t.ink,
+    brand: t.brand,
+    accent: t.accent,
+    "on-brand": readableOn(t.brand),
+    "on-accent": readableOn(t.accent),
+    "ink-2": mix(t.ink, t.bg, 0.84),
+    muted: mix(t.ink, t.bg, 0.64),
+    subtle: mix(t.ink, t.bg, 0.48),
+    line: mix(t.ink, t.surface, 0.14),
+    field: mix(t.ink, t.surface, 0.04),
+    // Cores de estado: escurecem no tema claro e clareiam no escuro.
+    ok: mix("#16a34a", t.ink, 0.74),
+    warn: mix("#d97706", t.ink, 0.74),
+    danger: mix("#dc2626", t.ink, 0.74),
+    info: mix("#0284c7", t.ink, 0.74),
   };
+}
+
+/**
+ * Variáveis CSS de um tema (para aplicar à página ou a um elemento).
+ * Cada cor tem também a versão "-rgb" (p.ex. "15 118 110"), usada pelas
+ * transparências do Tailwind (ver o plugin em vite.config.js).
+ */
+export function themeVars(t) {
+  const vars = { colorScheme: t.mode };
+  for (const [name, hex] of Object.entries(themeColors(t))) {
+    const v = name === "brand" ? "--brand" : `--c-${name}`;
+    vars[v] = hex;
+    vars[`${v}-rgb`] = toRgb(hex).join(" ");
+  }
+  return vars;
 }
 
 export function applyTheme(t) {

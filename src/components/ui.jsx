@@ -82,7 +82,7 @@ export function StatusBadge({ status, className = "" }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${className}`}
-      style={{ color: s.color, background: `color-mix(in oklab, ${s.color} 14%, transparent)` }}
+      style={{ color: s.color, background: `rgb(${s.rgb} / 14%)` }}
     >
       <span className="h-1.5 w-1.5 rounded-full" style={{ background: s.color }} />
       {s.label}

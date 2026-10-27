@@ -140,8 +140,8 @@ export default function Portal({ token }) {
           <section
             className="rounded-2xl border p-4"
             style={{
-              borderColor: `color-mix(in oklab, ${STATUS[st.status].color} 35%, transparent)`,
-              background: `color-mix(in oklab, ${STATUS[st.status].color} 8%, transparent)`,
+              borderColor: `rgb(${STATUS[st.status].rgb} / 35%)`,
+              background: `rgb(${STATUS[st.status].rgb} / 8%)`,
             }}
           >
             <div className="flex gap-3">
