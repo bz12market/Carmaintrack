@@ -1,5 +1,5 @@
 import { Gauge, Droplet, Filter, MessageSquare, CheckCircle2, ArrowRight, Pencil, Trash2 } from "lucide-react";
-import { fmtDate, fmtKm } from "../lib/util.js";
+import { filterNames, fmtDate, fmtKm } from "../lib/util.js";
 
 function Row({ icon: Icon, label, value }) {
   return (
@@ -49,7 +49,7 @@ export default function History({ services, onEdit, onDelete }) {
             <div className="grid gap-2 sm:grid-cols-3">
               <Row icon={Gauge} label="Quilometragem" value={fmtKm(s.km)} />
               {s.oil && <Row icon={Droplet} label="Óleo" value={s.oil} />}
-              {s.filters?.length > 0 && <Row icon={Filter} label="Filtros" value={s.filters.join(", ")} />}
+              {s.filters?.length > 0 && <Row icon={Filter} label="Filtros" value={filterNames(s.filters).join(", ")} />}
             </div>
             {s.notes && (
               <p className="mt-3 flex gap-2 border-t border-line/60 pt-3 text-sm text-ink-2">

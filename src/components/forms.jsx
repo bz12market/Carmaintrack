@@ -4,6 +4,7 @@ import { useStore } from "../lib/store.js";
 import { navigate } from "../lib/router.js";
 import {
   FILTERS,
+  filterNames,
   SERVICE_TITLES,
   addMonths,
   normalizePlate,
@@ -203,7 +204,7 @@ export function ServiceForm({ vehicleId, service, onClose }) {
   const vehicle = data.vehicles.find((x) => x.id === vid);
 
   const initial = () => {
-    if (service) return { ...service, extras: service.extras || [], filters: service.filters || [] };
+    if (service) return { ...service, extras: service.extras || [], filters: filterNames(service.filters) };
     const km = vehicle?.current_km || "";
     const date = todayISO();
     return {
@@ -211,7 +212,7 @@ export function ServiceForm({ vehicleId, service, onClose }) {
       date,
       km,
       oil: "",
-      filters: ["Óleo"],
+      filters: ["Filtro de óleo"],
       extras: [],
       notes: "",
       next_km: km ? Number(km) + w.default_interval_km : "",

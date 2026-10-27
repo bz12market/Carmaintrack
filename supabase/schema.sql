@@ -77,6 +77,18 @@ create table if not exists services (
   created_at timestamptz not null default now()
 );
 
+-- Nomes antigos dos filtros -> nomes atuais (pode correr várias vezes).
+update services set filters = array(
+  select case f
+    when 'Óleo' then 'Filtro de óleo'
+    when 'Ar do motor' then 'Filtro de ar'
+    when 'Ar da cabine' then 'Filtro de habitáculo'
+    when 'Combustível' then 'Filtro de combustível'
+    else f end
+  from unnest(filters) as f
+)
+where filters && array['Óleo', 'Ar do motor', 'Ar da cabine', 'Combustível'];
+
 create index if not exists vehicles_workshop_idx on vehicles (workshop_id);
 create index if not exists services_vehicle_idx on services (vehicle_id, date desc);
 

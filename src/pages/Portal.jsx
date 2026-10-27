@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { getPublicVehicle } from "../lib/db.js";
 import { applyTheme, normalizeTheme } from "../lib/theme.js";
-import { STATUS, fmtDate, fmtKm, vehicleName, vehicleStatus, waLink } from "../lib/util.js";
+import { STATUS, filterNames, fmtDate, fmtKm, vehicleName, vehicleStatus, waLink } from "../lib/util.js";
 import { Plate, VehiclePhoto } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
 import History from "../components/History.jsx";
@@ -126,7 +126,7 @@ export default function Portal({ token }) {
         </section>
 
         {st.last?.oil && <Tile icon={Droplet} label="Óleo utilizado" value={st.last.oil} />}
-        {st.last?.filters?.length > 0 && <Tile icon={Filter} label="Filtros" value={st.last.filters.join(", ")} />}
+        {st.last?.filters?.length > 0 && <Tile icon={Filter} label="Filtros" value={filterNames(st.last.filters).join(", ")} />}
         {(st.nextKm != null || st.nextDate) && (
           <Tile
             icon={CalendarClock}
