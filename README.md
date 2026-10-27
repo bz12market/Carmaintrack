@@ -1,7 +1,43 @@
 # Carmaintrack
 
 Histórico digital e lembretes de revisão para oficinas e centros de mudança
-de óleo. Feita com Vite, React, Tailwind e Supabase.
+de óleo, vendido por subscrição mensal. Feita com Vite, React, Tailwind,
+Supabase e Stripe, publicada na Vercel.
+
+## Páginas
+
+| Endereço | O que é |
+|---|---|
+| `/` | Landing page com a apresentação e os preços |
+| `/demo` | Demonstração com dados fictícios e um guia de 5 passos (sem login) |
+| `/entrar` | Login das oficinas, com "Esqueci-me da palavra-passe" |
+| `/registo` | Página de regresso do pagamento, onde se cria a conta |
+| `/app` | Painel da oficina (login **e** subscrição ativa) |
+| `/v/<código>` | Portal público do cliente (o QR das etiquetas) |
+
+## Subscrições: como funciona
+
+1. Na landing page, a oficina escolhe o plano e paga no **Stripe Checkout**
+   (cartão ou débito direto SEPA; pode ter dias experimentais).
+2. O Stripe volta a `/registo?session_id=...`. O servidor (`api/register.js`)
+   confirma que o pagamento está concluído e que a subscrição está ativa, e
+   só então cria a conta com o email usado no pagamento. A pessoa escolhe a
+   palavra-passe e entra logo.
+3. Não há outra forma de criar conta: o login não tem "Criar conta" e o
+   registo público do Supabase deve ficar desligado (ver abaixo).
+4. O Stripe avisa `api/stripe-webhook.js` de renovações, falhas de pagamento
+   e cancelamentos, e a tabela `subscriptions` é atualizada.
+5. Sem subscrição ativa, a própria base de dados (RLS) recusa o acesso aos
+   dados e o portal dos clientes deixa de mostrar o histórico. Os dados não
+   são apagados. Com `past_due` (pagamento em atraso) o acesso mantém-se
+   enquanto o Stripe tenta cobrar de novo.
+6. Em **Personalizar → Subscrição**, a oficina abre o portal de faturação do
+   Stripe para ver faturas, trocar o cartão ou cancelar.
+7. Quem cancelou e volta a pagar com o mesmo email recupera a conta e os dados.
+
+Os preços mostrados estão em `src/config/plans.js` (o valor cobrado é o do
+preço criado no Stripe). Para ativar o plano anual, cria o preço no Stripe,
+define `STRIPE_PRICE_ANUAL` e muda `enabled` para `true`.
 
 ## O que faz
 
@@ -45,7 +81,7 @@ de óleo. Feita com Vite, React, Tailwind e Supabase.
   margens "Nenhuma", escala 100% e desativa "Cabeçalhos e rodapés".
 - **Personalizar**: logótipo, nome, slogan, cor principal, telefone,
   WhatsApp e morada. Define ainda o intervalo padrão de revisão (km/meses) e
-  os limites de aviso (km/dias).
+  os limites de aviso (km/dias). Mostra também o estado da subscrição.
 
 **Portal do cliente** (`/v/<código>`): é público, não precisa de login nem de
 instalar nada, e mostra a marca da oficina. Inclui:
@@ -61,39 +97,70 @@ O link de cada veículo usa um código aleatório de 96 bits e não é
 adivinhável. O portal só recebe os dados desse veículo, através da função
 `public_vehicle` no Supabase.
 
-## Experimentar já (modo demonstração)
+## Experimentar no computador
 
 ```bash
 npm install
 npm run dev
 ```
 
-Abre http://localhost:5174. Sem um ficheiro `.env`, a app arranca em **modo
-demonstração**, com 4 veículos de exemplo guardados só neste browser e sem
-login. Para recomeçar, usa "Modo demonstração · repor dados" no menu.
+Abre http://localhost:5174 (landing) ou http://localhost:5174/demo. Sem um
+ficheiro `.env`, o painel em `/app` também abre com dados de exemplo.
 
-Exemplo de portal: http://localhost:5174/v/demo0000000000000000001a
+As funções de pagamento (`/api/...`) só correm com a Vercel CLI:
+`npx vercel dev` (com as variáveis abaixo num `.env`).
 
-## Pôr a funcionar a sério (Supabase)
+## Configuração em produção
 
-1. Cria um projeto em https://supabase.com.
-2. Em **SQL Editor**, corre o conteúdo de `supabase/schema.sql`.
-3. Em **Authentication → URL Configuration**, define o **Site URL** com o
-   endereço onde a app vai ficar (por exemplo, `https://carmaintrack.vercel.app`).
-4. Copia `.env.example` para `.env` e preenche `VITE_SUPABASE_URL` e
-   `VITE_SUPABASE_ANON_KEY` (em **Project Settings → API**).
-5. `npm run dev`, cria a conta na página de login e confirma o email.
+### Variáveis de ambiente (Vercel → Settings → Environment Variables)
 
-Cada conta é uma oficina independente. As políticas RLS garantem que cada
-oficina só vê os seus próprios clientes, veículos e serviços.
+| Variável | Onde a encontrar |
+|---|---|
+| `VITE_SUPABASE_URL` | Supabase → Project Settings → API → Project URL |
+| `VITE_SUPABASE_ANON_KEY` | Supabase → Project Settings → API → anon public |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API → service_role (**secreta**) |
+| `STRIPE_SECRET_KEY` | Stripe → Developers → API keys → Secret key |
+| `STRIPE_WEBHOOK_SECRET` | Stripe → Developers → Webhooks → o teu endpoint → Signing secret |
+| `STRIPE_PRICE_MENSAL` | Stripe → Product catalog → o produto → o preço mensal (`price_...`) |
+| `STRIPE_PRICE_ANUAL` | (opcional) o preço anual |
+| `APP_URL` | (opcional) o endereço público, se usares domínio próprio |
 
-## Deploy (Vercel)
+Depois de mudar variáveis, faz **Redeploy** da produção.
 
-1. Na Vercel, cria um projeto a partir deste repositório. O preset **Vite**
-   é detetado automaticamente.
-2. Adiciona as variáveis `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-3. O `vercel.json` já reencaminha todas as rotas para o `index.html`, para
-   que os links `/v/...` funcionem.
+### Supabase
+
+1. Em **SQL Editor**, corre `supabase/schema.sql` (pode ser corrido de novo
+   sobre uma instalação anterior: só acrescenta o que falta).
+2. Em **Authentication → Sign In / Providers**, desliga **Allow new users to
+   sign up**. As contas passam a ser criadas só pelo servidor, depois do
+   pagamento.
+3. Em **Authentication → URL Configuration**, define o **Site URL** e junta
+   `<endereço>/**` em **Redirect URLs** (usado no email de recuperação da
+   palavra-passe).
+
+Para dar acesso sem pagamento (a tua própria conta, ou uma oficina de
+teste), corre no SQL Editor:
+
+```sql
+insert into subscriptions (user_id, status)
+select id, 'active' from auth.users where email = 'email@exemplo.pt'
+on conflict (user_id) do update set status = 'active';
+```
+
+### Stripe
+
+1. **Product catalog → Add product**: "Carmaintrack", preço recorrente
+   **mensal** em EUR. Copia o id do preço (`price_...`).
+2. **Developers → Webhooks → Add endpoint**:
+   `https://<endereço>/api/stripe-webhook`, com os eventos
+   `customer.subscription.created`, `customer.subscription.updated` e
+   `customer.subscription.deleted`. Copia o **Signing secret**.
+3. **Settings → Billing → Customer portal**: ativa o portal (cancelar
+   subscrição, atualizar método de pagamento, ver faturas).
+4. **Settings → Payment methods**: ativa os métodos que queres aceitar
+   (cartão e débito direto SEPA funcionam com subscrições).
+5. Testa primeiro em **modo de teste** (chaves `sk_test_...`, cartão
+   `4242 4242 4242 4242`) e só depois muda para as chaves reais.
 
 ## Próximas fases (ainda não incluídas)
 
@@ -105,12 +172,15 @@ oficina só vê os seus próprios clientes, veículos e serviços.
 
 ```
 .
-├── supabase/schema.sql      tabelas, RLS e função do portal público
+├── api/                     funções do servidor (Vercel): checkout, registo,
+│                            webhook do Stripe e portal de faturação
+├── supabase/schema.sql      tabelas, subscrições, RLS e função do portal
 └── src/
-    ├── App.jsx              autenticação, estado global e rotas
+    ├── App.jsx              zonas (landing, /app, /demo), login e subscrição
+    ├── config/plans.js      planos e preços mostrados na landing page
     ├── lib/db.js            Supabase ou modo demonstração (localStorage)
     ├── lib/util.js          cálculo do estado da revisão, WhatsApp, formatos
     ├── components/          layout, formulários, timeline, UI base
-    └── pages/               Início, Veículos, Ficha, Lembretes, Etiquetas,
-                             Personalizar, Login e Portal do cliente
+    └── pages/               Landing, Registo, Login, Início, Veículos, Ficha,
+                             Lembretes, Etiquetas, Personalizar e Portal
 ```

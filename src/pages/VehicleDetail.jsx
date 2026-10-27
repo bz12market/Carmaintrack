@@ -15,7 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useStore } from "../lib/store.js";
-import { navigate } from "../lib/router.js";
+import { navigate, href } from "../lib/router.js";
 import { fmtDate, fmtKm, portalUrl, reminderText, shareText, vehicleName, waLink } from "../lib/util.js";
 import { Button, Field, Link, Modal, Plate, StatusBadge, VehiclePhoto, Empty } from "../components/ui.jsx";
 import History from "../components/History.jsx";
@@ -134,7 +134,7 @@ export default function VehicleDetail({ id }) {
           </Button>
           <button
             onClick={() => {
-              window.history.replaceState({}, "", `/veiculos/${v.id}`);
+              window.history.replaceState({}, "", href(`/veiculos/${v.id}`));
               setLabelHint(false);
             }}
             className="rounded-lg p-1.5 text-green-200/70 hover:bg-white/10"

@@ -10,11 +10,12 @@ import {
   X,
   UserPlus,
   Wrench,
-  FlaskConical,
 } from "lucide-react";
 import { useStore } from "../lib/store.js";
-import { isDemo, signOut, resetDemo } from "../lib/db.js";
+import { isDemo, signOut } from "../lib/db.js";
+import { go } from "../lib/router.js";
 import { Link, Button } from "./ui.jsx";
+import DemoGuide from "./DemoGuide.jsx";
 
 const NAV = [
   { to: "/", label: "Início", icon: Home },
@@ -77,23 +78,10 @@ export default function Layout({ path, email, children }) {
         ))}
       </nav>
       <div className="space-y-2 border-t border-white/10 p-3">
-        {isDemo && (
-          <button
-            onClick={() => {
-              if (confirm("Repor os dados de exemplo? Todas as alterações do modo demonstração serão perdidas.")) {
-                resetDemo();
-                window.location.reload();
-              }
-            }}
-            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-xs text-amber-300/80 hover:bg-white/5"
-          >
-            <FlaskConical size={16} /> Modo demonstração · repor dados
-          </button>
-        )}
         <p className="truncate px-3 text-xs text-slate-500">{email}</p>
         {!isDemo && (
           <button
-            onClick={signOut}
+            onClick={() => signOut().then(() => go("/entrar"))}
             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-red-300 hover:bg-white/5"
           >
             <LogOut size={18} /> Sair
@@ -125,6 +113,7 @@ export default function Layout({ path, email, children }) {
         </div>
       )}
 
+      {isDemo && <DemoGuide />}
       <header className="no-print sticky top-0 z-20 flex items-center gap-2 border-b border-white/10 bg-[#0b0d12]/85 px-4 py-3 backdrop-blur">
         <button className="rounded-lg p-2 text-slate-300 hover:bg-white/10 lg:hidden" onClick={() => setOpen(true)} aria-label="Menu">
           <Menu size={20} />

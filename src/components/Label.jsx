@@ -32,8 +32,8 @@ export function nextLine(st) {
  * mode "mono": preto sobre branco, pensado para impressoras térmicas.
  * Todas as medidas em mm, escaladas pela altura da etiqueta.
  */
-export default function Label({ vehicle, workshop, status, size, mode = "color" }) {
-  const qr = useQr(portalUrl(vehicle.public_token));
+export default function Label({ vehicle, workshop, status, size, mode = "color", qrUrl }) {
+  const qr = useQr(qrUrl || portalUrl(vehicle.public_token));
   const { w, h } = size;
   const mono = mode === "mono";
   const compact = h < 40;

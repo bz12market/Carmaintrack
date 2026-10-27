@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { X, Car } from "lucide-react";
 import { STATUS } from "../lib/util.js";
-import { navigate } from "../lib/router.js";
+import { navigate, href } from "../lib/router.js";
 
 export function Button({ variant = "primary", className = "", ...props }) {
   const styles = {
@@ -24,7 +24,7 @@ export function Button({ variant = "primary", className = "", ...props }) {
 export function Link({ to, className = "", children, ...props }) {
   return (
     <a
-      href={to}
+      href={href(to)}
       className={className}
       onClick={(e) => {
         if (e.metaKey || e.ctrlKey || e.button !== 0) return;

@@ -1,3 +1,5 @@
+import { getPortalPrefix } from "./router.js";
+
 export const FILTERS = ["Óleo", "Ar do motor", "Ar da cabine", "Combustível"];
 export const SERVICE_TITLES = ["Mudança de óleo", "Revisão", "Reparação", "Inspeção pré-IPO", "Outro"];
 
@@ -81,7 +83,7 @@ export function waLink(phone, text) {
   return n ? `https://wa.me/${n}${q}` : `https://wa.me/${q}`;
 }
 
-export const portalUrl = (token) => `${window.location.origin}/v/${token}`;
+export const portalUrl = (token) => `${window.location.origin}${getPortalPrefix()}/v/${token}`;
 
 export function reminderText(vehicle, st, workshop, clientName) {
   const first = (clientName || "").split(" ")[0];

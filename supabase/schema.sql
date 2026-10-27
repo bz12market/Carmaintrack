@@ -77,27 +77,60 @@ create table if not exists services (
 create index if not exists vehicles_workshop_idx on vehicles (workshop_id);
 create index if not exists services_vehicle_idx on services (vehicle_id, date desc);
 
+-- Subscrições (Stripe) -------------------------------------------------------
+-- Escrita só pelo servidor (service role, em api/*.js). Cada conta só lê a sua.
+create table if not exists subscriptions (
+  user_id uuid primary key references auth.users on delete cascade,
+  stripe_customer_id text unique,
+  stripe_subscription_id text unique,
+  status text not null,
+  plan text,
+  current_period_end timestamptz,
+  cancel_at_period_end boolean not null default false,
+  updated_at timestamptz not null default now()
+);
+
+-- 'past_due' dá alguns dias de tolerância enquanto o Stripe tenta cobrar de novo.
+create or replace function has_active_subscription() returns boolean
+language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from subscriptions
+    where user_id = auth.uid() and status in ('active', 'trialing', 'past_due')
+  )
+$$;
+
 -- Row Level Security ------------------------------------------------------
 alter table workshops enable row level security;
 alter table clients enable row level security;
 alter table vehicles enable row level security;
 alter table services enable row level security;
+alter table subscriptions enable row level security;
+
+-- Sem subscrição ativa, a conta deixa de ler e escrever os dados da oficina.
 
 drop policy if exists workshops_owner on workshops;
 create policy workshops_owner on workshops for all
-  using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+  using (owner_id = auth.uid() and has_active_subscription())
+  with check (owner_id = auth.uid() and has_active_subscription());
 
 drop policy if exists clients_owner on clients;
 create policy clients_owner on clients for all
-  using (workshop_id = my_workshop_id()) with check (workshop_id = my_workshop_id());
+  using (workshop_id = my_workshop_id() and has_active_subscription())
+  with check (workshop_id = my_workshop_id() and has_active_subscription());
 
 drop policy if exists vehicles_owner on vehicles;
 create policy vehicles_owner on vehicles for all
-  using (workshop_id = my_workshop_id()) with check (workshop_id = my_workshop_id());
+  using (workshop_id = my_workshop_id() and has_active_subscription())
+  with check (workshop_id = my_workshop_id() and has_active_subscription());
 
 drop policy if exists services_owner on services;
 create policy services_owner on services for all
-  using (workshop_id = my_workshop_id()) with check (workshop_id = my_workshop_id());
+  using (workshop_id = my_workshop_id() and has_active_subscription())
+  with check (workshop_id = my_workshop_id() and has_active_subscription());
+
+drop policy if exists subscriptions_read_own on subscriptions;
+create policy subscriptions_read_own on subscriptions for select
+  using (user_id = auth.uid());
 
 -- Portal público ----------------------------------------------------------
 create or replace function public_vehicle(p_token text) returns json
@@ -112,6 +145,13 @@ begin
     return null;
   end if;
   select * into w from workshops where id = v.workshop_id;
+  -- Com a subscrição da oficina cancelada, o portal deixa de mostrar dados.
+  if not exists (
+    select 1 from subscriptions
+    where user_id = w.owner_id and status in ('active', 'trialing', 'past_due')
+  ) then
+    return null;
+  end if;
   select name into owner_name from clients where id = v.client_id;
 
   return json_build_object(

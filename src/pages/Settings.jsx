@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ImagePlus, Trash2, Check } from "lucide-react";
 import { useStore } from "../lib/store.js";
+import { SubscriptionPanel } from "./Account.jsx";
 import { resizeImage } from "../lib/util.js";
 import { Button, Field } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
@@ -8,7 +9,7 @@ import { Logo } from "../components/Layout.jsx";
 const COLORS = ["#f97316", "#dc2626", "#2563eb", "#16a34a", "#7c3aed", "#0891b2", "#db2777", "#ca8a04"];
 
 export default function Settings() {
-  const { data, save } = useStore();
+  const { data, save, subscription } = useStore();
   const [w, setW] = useState(data.workshop);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState(false);
@@ -125,6 +126,7 @@ export default function Settings() {
           {ok ? <Check size={16} /> : null} {ok ? "Guardado" : "Guardar alterações"}
         </Button>
       </div>
+      <SubscriptionPanel subscription={subscription} />
     </form>
   );
 }
