@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Trash2, ImagePlus } from "lucide-react";
 import { useStore } from "../lib/store.js";
-import { DEMO_LIMITS, isDemo } from "../lib/db.js";
+import { DEMO_LIMITS, demoLimitMessage, isDemo } from "../lib/db.js";
 import { navigate } from "../lib/router.js";
 import {
   FILTERS,
@@ -44,10 +44,9 @@ export function RecordForm({ vehicle, onClose }) {
     if (clientMode === "new" && !client.name.trim()) return setErr("Indica o nome do cliente.");
     // Na demo, verifica os limites antes de gravar (para não ficar um cliente sem veículo).
     if (isDemo && !editing) {
-      if (data.vehicles.length >= DEMO_LIMITS.vehicles)
-        return setErr(`Na demonstração pode ter até ${DEMO_LIMITS.vehicles} veículos. Subscreva para registos ilimitados.`);
+      if (data.vehicles.length >= DEMO_LIMITS.vehicles) return setErr(demoLimitMessage("vehicles"));
       if (clientMode === "new" && data.clients.length >= DEMO_LIMITS.clients)
-        return setErr(`Na demonstração pode ter até ${DEMO_LIMITS.clients} clientes. Escolha um cliente existente ou subscreva.`);
+        return setErr(`${demoLimitMessage("clients")} Também pode escolher um cliente existente.`);
     }
 
     setBusy(true);

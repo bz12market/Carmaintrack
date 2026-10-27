@@ -51,7 +51,20 @@ export const newToken = () =>
 const DEMO_KEY = "carmaintrack-demo-v1";
 const DEMO_VISIT_KEY = "carmaintrack-demo-visit";
 export const DEMO_TTL_HOURS = 48;
-export const DEMO_LIMITS = { vehicles: 15, clients: 15, services: 40 };
+// Quantos registos se podem acrescentar aos exemplos (4 veículos, 4 clientes
+// e 6 revisões); os limites totais são os exemplos + estes.
+export const DEMO_EXTRA = { vehicles: 3, clients: 3, services: 5 };
+const SEED_COUNTS = (({ vehicles, clients, services }) => ({
+  vehicles: vehicles.length,
+  clients: clients.length,
+  services: services.length,
+}))(demoSeed());
+export const DEMO_LIMITS = Object.fromEntries(Object.entries(DEMO_EXTRA).map(([k, n]) => [k, SEED_COUNTS[k] + n]));
+
+const LIMIT_NAMES = { vehicles: "veículos", clients: "clientes", services: "revisões" };
+/** Mensagem de limite atingido na demo. */
+export const demoLimitMessage = (table) =>
+  `Na demonstração pode acrescentar até ${DEMO_EXTRA[table]} ${LIMIT_NAMES[table]} aos exemplos. Subscreva para registos ilimitados.`;
 
 const demoExpired = (data) => !data?.createdAt || Date.now() - data.createdAt > DEMO_TTL_HOURS * 3600 * 1000;
 
@@ -213,9 +226,7 @@ export async function saveRow(table, row) {
     }
     const list = data[table];
     if (!row.id && list.length >= DEMO_LIMITS[table])
-      throw new Error(
-        `Na demonstração pode ter até ${DEMO_LIMITS[table]} ${table === "services" ? "revisões" : table === "clients" ? "clientes" : "veículos"}. Subscreva para registos ilimitados.`
-      );
+      throw new Error(demoLimitMessage(table));
     const saved = { created_at: new Date().toISOString(), ...row, id: row.id || uuid() };
     if (table === "vehicles" && !saved.public_token) saved.public_token = newToken();
     const i = list.findIndex((r) => r.id === saved.id);
