@@ -22,7 +22,7 @@ export const newToken = () =>
 
 // --- Modo demonstração ----------------------------------------------------
 
-const DEMO_KEY = "revisa-demo-v1";
+const DEMO_KEY = "carmaintrack-demo-v1";
 
 function demoRead() {
   try {
@@ -55,7 +55,7 @@ export function resetDemo() {
 // --- Autenticação -----------------------------------------------------------
 
 export async function getSession() {
-  if (isDemo) return { user: { email: "demo@revisa.app" } };
+  if (isDemo) return { user: { email: "demo@carmaintrack.app" } };
   const { data } = await supabase.auth.getSession();
   return data.session;
 }

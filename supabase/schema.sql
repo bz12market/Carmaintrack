@@ -1,4 +1,4 @@
--- REVISA — esquema Supabase
+-- CARMAINTRACK — esquema Supabase
 -- Corre este script no SQL Editor do teu projeto Supabase antes de usar a app.
 -- Cada conta (oficina) só vê os seus próprios dados (Row Level Security).
 -- O portal público do cliente lê os dados de UM veículo através da função

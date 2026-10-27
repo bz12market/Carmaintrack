@@ -8,7 +8,7 @@ import Label, { LABEL_SIZES } from "../components/Label.jsx";
 
 // As opções de impressão dependem da impressora deste computador,
 // por isso ficam guardadas no browser e não na conta.
-const PREFS_KEY = "revisa-label-prefs";
+const PREFS_KEY = "carmaintrack-label-prefs";
 const DEFAULT_PREFS = { size: "100x60", mode: "mono", paper: "roll", copies: 1 };
 
 function readPrefs() {
@@ -90,11 +90,11 @@ export default function Cards() {
   const pageCss =
     prefs.paper === "roll"
       ? `@page { size: ${size.w}mm ${size.h}mm; margin: 0; }
-         .print-sheet .revisa-label { break-after: page; page-break-after: always; border-radius: 0 !important; }
-         .print-sheet .revisa-label:last-child { break-after: auto; page-break-after: auto; }`
+         .print-sheet .carmaintrack-label { break-after: page; page-break-after: always; border-radius: 0 !important; }
+         .print-sheet .carmaintrack-label:last-child { break-after: auto; page-break-after: auto; }`
       : `@page { size: A4; margin: 8mm; }
          .print-sheet { display: flex !important; flex-wrap: wrap; gap: 3mm; }
-         .print-sheet .revisa-label { break-inside: avoid; }`;
+         .print-sheet .carmaintrack-label { break-inside: avoid; }`;
 
   return (
     <div className="space-y-6">

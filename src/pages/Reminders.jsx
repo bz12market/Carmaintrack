@@ -5,7 +5,7 @@ import { fmtDate, fmtKm, reminderText, vehicleName, waLink } from "../lib/util.j
 import { Button, Empty, Link, Plate, StatusBadge, VehiclePhoto } from "../components/ui.jsx";
 
 // Guarda (só neste browser) quando foi enviado o último lembrete de cada veículo.
-const SENT_KEY = "revisa-reminders-sent";
+const SENT_KEY = "carmaintrack-reminders-sent";
 function readSent() {
   try {
     return JSON.parse(localStorage.getItem(SENT_KEY)) || {};

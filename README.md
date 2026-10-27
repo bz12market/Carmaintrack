@@ -1,10 +1,7 @@
-# Revisa
+# Carmaintrack
 
 Histórico digital e lembretes de revisão para oficinas e centros de mudança
 de óleo. Feita com Vite, React, Tailwind e Supabase.
-
-"Revisa" é um nome provisório. Para o trocar, altera-o em `index.html`,
-`src/pages/Login.jsx` e neste README.
 
 ## O que faz
 
@@ -82,7 +79,7 @@ Exemplo de portal: http://localhost:5174/v/demo0000000000000000001a
 1. Cria um projeto em https://supabase.com.
 2. Em **SQL Editor**, corre o conteúdo de `supabase/schema.sql`.
 3. Em **Authentication → URL Configuration**, define o **Site URL** com o
-   endereço onde a app vai ficar (por exemplo, `https://revisa.vercel.app`).
+   endereço onde a app vai ficar (por exemplo, `https://carmaintrack.vercel.app`).
 4. Copia `.env.example` para `.env` e preenche `VITE_SUPABASE_URL` e
    `VITE_SUPABASE_ANON_KEY` (em **Project Settings → API**).
 5. `npm run dev`, cria a conta na página de login e confirma o email.

@@ -54,7 +54,7 @@ export default function Label({ vehicle, workshop, status, size, mode = "color" 
 
   return (
     <div
-      className="revisa-label relative flex overflow-hidden"
+      className="carmaintrack-label relative flex overflow-hidden"
       style={{
         width: mm(w),
         height: mm(h),
