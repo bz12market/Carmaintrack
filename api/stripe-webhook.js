@@ -1,7 +1,9 @@
-// POST /api/stripe-webhook — o Stripe avisa aqui das renovações, falhas de
-// pagamento e cancelamentos, e a tabela subscriptions é atualizada.
-// Eventos a ativar no Stripe: customer.subscription.created/updated/deleted.
-import { HttpError, env, getAdmin, getStripe, handle, json, subscriptionRow } from "./_lib.js";
+// POST /api/stripe-webhook — o Stripe avisa aqui de novas subscrições,
+// renovações, falhas de pagamento e cancelamentos.
+// Eventos a ativar no Stripe: checkout.session.completed e
+// customer.subscription.created/updated/deleted.
+import { HttpError, appOrigin, env, getAdmin, getStripe, handle, json, subscriptionRow } from "./_lib.js";
+import { provisionFromCheckout } from "./_account.js";
 
 export const POST = handle(async (request) => {
   const secret = env("STRIPE_WEBHOOK_SECRET");
@@ -13,6 +15,14 @@ export const POST = handle(async (request) => {
     event = await getStripe().webhooks.constructEventAsync(payload, request.headers.get("stripe-signature"), secret);
   } catch {
     throw new HttpError(400, "Assinatura do webhook inválida.");
+  }
+
+  // Checkout concluído: cria a conta (se ainda não existir) e o Supabase envia
+  // o email de boas-vindas com o link para definir a palavra-passe. Assim quem
+  // fechar o browser depois de pagar não fica sem acesso.
+  if (event.type === "checkout.session.completed" && event.data.object.mode === "subscription") {
+    const result = await provisionFromCheckout(event.data.object.id, appOrigin(request));
+    return json(200, { received: true, result });
   }
 
   if (event.type.startsWith("customer.subscription.")) {

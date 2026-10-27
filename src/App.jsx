@@ -78,7 +78,8 @@ function Spinner() {
 
 function AdminApp({ path, url }) {
   const [session, setSession] = useState(undefined);
-  const [recovery, setRecovery] = useState(db.recoveryFromUrl);
+  // "recovery" ou "invite" quando se chega por um link de email que pede a palavra-passe.
+  const [recovery, setRecovery] = useState(db.passwordLinkType);
   const [subscription, setSubscription] = useState(undefined);
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
@@ -89,7 +90,7 @@ function AdminApp({ path, url }) {
     return db.onAuthChange((s, event) => {
       setSession(s);
       // Link "esqueci-me da palavra-passe" do email: pede a nova palavra-passe.
-      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+      if (event === "PASSWORD_RECOVERY") setRecovery("recovery");
     });
   }, []);
 
@@ -173,7 +174,7 @@ function AdminApp({ path, url }) {
 
   if (session === undefined) return <Spinner />;
   if (!session) return <Login />;
-  if (recovery) return <SetPassword onDone={() => setRecovery(false)} />;
+  if (recovery) return <SetPassword welcome={recovery === "invite"} onDone={() => setRecovery(null)} />;
   if (error)
     return (
       <div className="mx-auto max-w-md p-6 pt-24 text-center">

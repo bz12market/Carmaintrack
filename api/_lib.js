@@ -117,12 +117,12 @@ export function subscriptionRow(sub) {
   };
 }
 
-export async function findUserIdByEmail(admin, email) {
+export async function findUserByEmail(admin, email) {
   for (let page = 1; page < 50; page++) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 1000 });
     if (error) throw error;
     const user = data.users.find((u) => (u.email || "").toLowerCase() === email);
-    if (user) return user.id;
+    if (user) return user;
     if (data.users.length < 1000) return null;
   }
   return null;
