@@ -44,19 +44,61 @@ export const newToken = () =>
   Array.from(crypto.getRandomValues(new Uint8Array(12)), (b) => b.toString(16).padStart(2, "0")).join("");
 
 // --- Modo demonstração ----------------------------------------------------
+// Os dados da demo ficam neste browser e são temporários: recomeçam a cada
+// nova visita (ver startDemoVisit) e apagam-se 48 h depois de criados, mesmo
+// com a página aberta. Há também limites de registos.
 
 const DEMO_KEY = "carmaintrack-demo-v1";
+const DEMO_VISIT_KEY = "carmaintrack-demo-visit";
+export const DEMO_TTL_HOURS = 48;
+export const DEMO_LIMITS = { vehicles: 15, clients: 15, services: 40 };
+
+const demoExpired = (data) => !data?.createdAt || Date.now() - data.createdAt > DEMO_TTL_HOURS * 3600 * 1000;
 
 function demoRead() {
   try {
     const raw = localStorage.getItem(DEMO_KEY);
-    if (raw) return JSON.parse(raw);
+    const data = raw && JSON.parse(raw);
+    if (data && !demoExpired(data)) return data;
   } catch {
     /* storage indisponível: usa os dados de exemplo em memória */
   }
-  const seed = demoSeed();
+  const seed = { ...demoSeed(), createdAt: Date.now() };
   demoWrite(seed);
   return seed;
+}
+
+/** true se os dados atuais da demo já passaram das 48 h. */
+export function demoIsExpired() {
+  try {
+    return demoExpired(JSON.parse(localStorage.getItem(DEMO_KEY)));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Entrada no painel da demo. Uma visita nova (separador novo, ou voltar à
+ * demo depois de sair para outra página) começa com os dados de exemplo;
+ * recarregar a página dentro da mesma visita mantém o que foi feito.
+ */
+export function startDemoVisit({ firstLoad }) {
+  let ongoing = false;
+  try {
+    ongoing = firstLoad && sessionStorage.getItem(DEMO_VISIT_KEY) === "1";
+    sessionStorage.setItem(DEMO_VISIT_KEY, "1");
+  } catch {
+    /* sem sessionStorage: cada entrada é uma visita nova */
+  }
+  if (!ongoing) resetDemo();
+}
+
+export function endDemoVisit() {
+  try {
+    sessionStorage.removeItem(DEMO_VISIT_KEY);
+  } catch {
+    /* ignora */
+  }
 }
 
 function demoWrite(data) {
@@ -170,6 +212,10 @@ export async function saveRow(table, row) {
       return data.workshop;
     }
     const list = data[table];
+    if (!row.id && list.length >= DEMO_LIMITS[table])
+      throw new Error(
+        `Na demonstração pode ter até ${DEMO_LIMITS[table]} ${table === "services" ? "revisões" : table === "clients" ? "clientes" : "veículos"}. Subscreva para registos ilimitados.`
+      );
     const saved = { created_at: new Date().toISOString(), ...row, id: row.id || uuid() };
     if (table === "vehicles" && !saved.public_token) saved.public_token = newToken();
     const i = list.findIndex((r) => r.id === saved.id);

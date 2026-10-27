@@ -2,7 +2,7 @@ import { useState } from "react";
 import { ChevronDown, ChevronUp, RotateCcw, Sparkles } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { navigate } from "../lib/router.js";
-import { resetDemo } from "../lib/db.js";
+import { DEMO_LIMITS, DEMO_TTL_HOURS, resetDemo } from "../lib/db.js";
 import { GoLink } from "./Brand.jsx";
 
 const KEY = "carmaintrack-demo-guide";
@@ -41,7 +41,10 @@ export default function DemoGuide() {
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-2.5 text-sm">
         <p className="flex items-center gap-2 font-semibold text-brand">
           <Sparkles size={16} /> Demonstração
-          <span className="hidden font-normal text-muted sm:inline">· dados fictícios, guardados só neste browser</span>
+          <span className="hidden font-normal text-muted sm:inline">
+            · dados fictícios, apagados ao sair ou após {DEMO_TTL_HOURS} h · até {DEMO_LIMITS.vehicles} veículos e{" "}
+            {DEMO_LIMITS.services} revisões
+          </span>
         </p>
         <div className="ml-auto flex items-center gap-2">
           <button

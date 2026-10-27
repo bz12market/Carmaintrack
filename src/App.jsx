@@ -27,6 +27,17 @@ const PORTAL = /^\/v\/([A-Za-z0-9]+)\/?$/;
 //   /app/...       painel da oficina (login + subscrição ativa)
 //   /demo/...      demonstração com dados de exemplo, sem login
 //   /v/<código>    portal público do cliente (e /demo/v/<código> na demo)
+// Zona onde a app estava no render anterior (null no primeiro carregamento).
+let lastZone = null;
+
+/** Entrar no painel da demo a partir de outra zona é uma visita nova. */
+function trackDemoVisit(zone) {
+  if (zone === lastZone) return;
+  if (zone === "demo") db.startDemoVisit({ firstLoad: lastZone === null });
+  else if (lastZone === "demo") db.endDemoVisit();
+  lastZone = zone;
+}
+
 export default function App() {
   const url = usePath();
   const path = url.split("?")[0];
@@ -36,10 +47,13 @@ export default function App() {
     setArea("/demo", "/demo");
     const inner = path.slice("/demo".length) || "/";
     const portal = inner.match(PORTAL);
+    // O portal da demo abre noutro separador e mostra os dados da visita em curso.
     if (portal) return <Portal token={portal[1]} />;
+    trackDemoVisit("demo");
     return <AdminApp key="demo" path={inner} url={url} />;
   }
 
+  trackDemoVisit("other");
   db.setDemo(false);
   if (path === "/app" || path.startsWith("/app/")) {
     setArea("/app", "");
@@ -92,6 +106,15 @@ function AdminApp({ path, url }) {
   }, []);
 
   // Só recarrega quando muda a conta, não a cada renovação do token.
+  // Na demo, os dados apagam-se 48 h depois de criados, mesmo com a página aberta.
+  useEffect(() => {
+    if (!db.isDemo) return;
+    const timer = setInterval(() => {
+      if (db.demoIsExpired()) refresh();
+    }, 60 * 1000);
+    return () => clearInterval(timer);
+  }, [refresh]);
+
   const userId = session?.user?.id || (session ? "demo" : null);
   useEffect(() => {
     if (userId) refresh();
