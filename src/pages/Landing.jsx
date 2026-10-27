@@ -384,8 +384,8 @@ export default function Landing() {
                 plan === mainPlan ? "border-brand/50 bg-gradient-to-b from-brand/10 to-surface shadow-xl shadow-brand/10" : "border-line bg-surface"
               }`}
             >
-              {plan === mainPlan && plans.length > 1 && (
-                <span className="absolute -top-3 left-7 rounded-full bg-accent px-3 py-1 text-xs font-bold text-on-accent">Mais escolhido</span>
+              {plan.badge && plans.length > 1 && (
+                <span className="absolute -top-3 left-7 rounded-full bg-accent px-3 py-1 text-xs font-bold text-on-accent">{plan.badge}</span>
               )}
               <h3 className="text-lg font-bold text-ink">{plan.name}</h3>
               <p className="mt-4 flex items-end gap-1">
@@ -393,6 +393,7 @@ export default function Landing() {
                 <span className="mb-1.5 text-muted">{plan.period}</span>
               </p>
               <p className="mt-1 text-sm text-subtle">{plan.note}</p>
+              {plan.saving && <p className="mt-1 text-sm font-semibold text-brand">{plan.saving}</p>}
               <ul className="mt-6 space-y-2.5 text-ink-2">
                 {PLAN_FEATURES.map((f) => (
                   <li key={f} className="flex gap-2.5">
