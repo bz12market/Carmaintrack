@@ -1,23 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
-import { Printer, Download, Search, Info } from "lucide-react";
+import { Printer, Download, Search, Info, Check, AlertTriangle, Loader2 } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { portalUrl, vehicleName } from "../lib/util.js";
-import { Empty, Plate } from "../components/ui.jsx";
-import Label, { LABEL_SIZES, isVertical } from "../components/Label.jsx";
+import { Empty, Link, Plate } from "../components/ui.jsx";
+import Label, { allSizes, isVertical } from "../components/Label.jsx";
+import { readLabelPrefs, saveLabelPrefs } from "../lib/labelPrefs.js";
+import { directPrintReady, printLabelsDirect, readPrintPrefs, waitForLabels } from "../lib/directPrint.js";
 
-// As opções de impressão dependem da impressora deste computador,
-// por isso ficam guardadas no browser e não na conta.
-const PREFS_KEY = "carmaintrack-label-prefs";
-const DEFAULT_PREFS = { size: "100x60", mode: "mono", paper: "roll", copies: 1 };
-
-function readPrefs() {
-  try {
-    return { ...DEFAULT_PREFS, ...JSON.parse(localStorage.getItem(PREFS_KEY)) };
-  } catch {
-    return DEFAULT_PREFS;
-  }
-}
 
 function Choice({ value, onChange, options }) {
   return (
@@ -38,22 +28,25 @@ function Choice({ value, onChange, options }) {
 
 export default function Cards() {
   const { data, statuses, clientOf } = useStore();
-  const initial = new URLSearchParams(window.location.search).get("v");
+  const params = new URLSearchParams(window.location.search);
+  const initial = params.get("v");
   const [selected, setSelected] = useState(() => new Set(initial ? [initial] : []));
   const [q, setQ] = useState("");
-  const [prefs, setPrefsState] = useState(readPrefs);
+  const [prefs, setPrefsState] = useState(readLabelPrefs);
+  const [printing, setPrinting] = useState(null); // { busy } | { ok } | { error }
+  const directRef = useRef(null);
+  const printPrefs = readPrintPrefs();
+  // A impressão direta envia uma etiqueta por página: só se aplica ao rolo.
+  const direct = directPrintReady(printPrefs) && prefs.paper === "roll";
 
   const setPrefs = (patch) => {
     const next = { ...prefs, ...patch };
     setPrefsState(next);
-    try {
-      localStorage.setItem(PREFS_KEY, JSON.stringify(next));
-    } catch {
-      /* ignora */
-    }
+    saveLabelPrefs(next);
   };
 
-  const size = LABEL_SIZES.find((s) => s.id === prefs.size) || LABEL_SIZES[0];
+  const sizes = allSizes(data.workshop);
+  const size = sizes.find((s) => s.id === prefs.size) || sizes[0];
   const needle = q.trim().toLowerCase().replace(/-/g, "");
   const list = [...data.vehicles]
     .sort((a, b) => a.plate.localeCompare(b.plate))
@@ -74,6 +67,30 @@ export default function Cards() {
       n.has(id) ? n.delete(id) : n.add(id);
       return n;
     });
+
+  async function print() {
+    if (!direct) return window.print();
+    setPrinting({ busy: true });
+    try {
+      const nodes = await waitForLabels(directRef.current);
+      const { printer, count } = await printLabelsDirect(nodes, { size, mode: prefs.mode, copies });
+      setPrinting({ ok: `${count} etiqueta${count === 1 ? "" : "s"} enviada${count === 1 ? "" : "s"} para ${printer}.` });
+    } catch (err) {
+      setPrinting({ error: err.message || String(err) });
+    }
+  }
+
+  // Vindo de "Imprimir etiqueta" (ficha do veículo), imprime logo se a impressão direta estiver ligada.
+  const autoPrint = params.get("imprimir") === "1";
+  const autoPrinted = useRef(false);
+  useEffect(() => {
+    if (!autoPrinted.current && autoPrint && direct && chosen.length) {
+      autoPrinted.current = true; // só uma vez, mesmo que o efeito corra duas vezes
+      print();
+    }
+    // Só ao abrir a página.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function download(v) {
     const url = await QRCode.toDataURL(portalUrl(v.public_token), { margin: 2, width: 1024 });
@@ -136,18 +153,24 @@ export default function Cards() {
               <span className="label">Tamanho da etiqueta</span>
               <select className="input" value={prefs.size} onChange={(e) => setPrefs({ size: e.target.value })}>
                 {[
-                  ["Horizontais", LABEL_SIZES.filter((s) => !isVertical(s))],
-                  ["Verticais", LABEL_SIZES.filter(isVertical)],
-                ].map(([group, sizes]) => (
-                  <optgroup key={group} label={group}>
-                    {sizes.map((s) => (
-                      <option key={s.id} value={s.id}>
-                        {s.name} — {s.hint}
-                      </option>
-                    ))}
-                  </optgroup>
-                ))}
+                  ["Horizontais", sizes.filter((s) => !s.custom && !isVertical(s))],
+                  ["Verticais", sizes.filter((s) => !s.custom && isVertical(s))],
+                  ["Personalizados", sizes.filter((s) => s.custom)],
+                ]
+                  .filter(([, list]) => list.length)
+                  .map(([group, list]) => (
+                    <optgroup key={group} label={group}>
+                      {list.map((s) => (
+                        <option key={s.id} value={s.id}>
+                          {s.name} — {s.hint}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ))}
               </select>
+              <Link to="/personalizar#etiquetas" className="mt-1 inline-block text-xs font-medium text-brand hover:underline">
+                + Criar um tamanho personalizado
+              </Link>
             </div>
             <div>
               <span className="label">Cópias por veículo</span>
@@ -177,13 +200,43 @@ export default function Cards() {
           </div>
           <button
             type="button"
-            onClick={() => window.print()}
-            disabled={toPrint.length === 0}
+            onClick={print}
+            disabled={toPrint.length === 0 || printing?.busy}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-brand px-4 py-2.5 text-sm font-semibold text-on-brand disabled:opacity-50"
           >
-            <Printer size={16} /> Imprimir {toPrint.length || ""} etiqueta{toPrint.length === 1 ? "" : "s"}
+            {printing?.busy ? <Loader2 size={16} className="animate-spin" /> : <Printer size={16} />} Imprimir{" "}
+            {toPrint.length || ""} etiqueta{toPrint.length === 1 ? "" : "s"}
           </button>
         </div>
+        <p className="-mt-2 text-xs text-muted">
+          {direct ? (
+            <>
+              Envio direto para <b className="text-ink">{printPrefs.printer}</b>, sem janela de impressão.
+            </>
+          ) : (
+            <>
+              Abre a janela de impressão do browser.{" "}
+              {prefs.paper === "roll" && (
+                <Link to="/personalizar#impressao" className="font-medium text-brand hover:underline">
+                  Ligar a impressão direta
+                </Link>
+              )}
+            </>
+          )}
+        </p>
+        {printing?.ok && (
+          <p className="flex items-center gap-2 rounded-xl bg-ok/10 px-3 py-2 text-sm text-ok">
+            <Check size={16} /> {printing.ok}
+          </p>
+        )}
+        {printing?.error && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">
+            <AlertTriangle size={16} /> <span className="flex-1">{printing.error}</span>
+            <button type="button" onClick={() => window.print()} className="font-semibold underline">
+              Usar a janela de impressão
+            </button>
+          </div>
+        )}
 
         <div className="card divide-y divide-line">
           {list.map((v) => (
@@ -226,6 +279,17 @@ export default function Cards() {
           <Label key={key} vehicle={v} workshop={data.workshop} status={statuses[v.id]} size={size} mode={prefs.mode} />
         ))}
       </div>
+
+      {/* Etiquetas fora do ecrã, convertidas em imagem para a impressão direta (uma por veículo). */}
+      {direct && (
+        <div ref={directRef} aria-hidden="true" className="print:hidden" style={{ position: "fixed", left: -10000, top: 0 }}>
+          {chosen.map((v) => (
+            <div key={v.id} style={{ marginBottom: 8 }}>
+              <Label vehicle={v} workshop={data.workshop} status={statuses[v.id]} size={size} mode={prefs.mode} />
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

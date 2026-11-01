@@ -129,7 +129,7 @@ export default function VehicleDetail({ id }) {
           <p className="flex-1 text-sm text-ok">
             Serviço guardado. Imprima a etiqueta com a próxima revisão e cole-a no para-brisas antes de entregar o carro.
           </p>
-          <Button onClick={() => navigate(`/cartoes?v=${v.id}`)}>
+          <Button onClick={() => navigate(`/cartoes?v=${v.id}&imprimir=1`)}>
             <Printer size={16} /> Imprimir etiqueta
           </Button>
           <button
@@ -213,7 +213,7 @@ export default function VehicleDetail({ id }) {
           <Button variant="ghost" onClick={copy}>
             {copied ? <Check size={16} /> : <Copy size={16} />} {copied ? "Copiado" : "Copiar link"}
           </Button>
-          <Button variant="ghost" onClick={() => navigate(`/cartoes?v=${v.id}`)}>
+          <Button variant="ghost" onClick={() => navigate(`/cartoes?v=${v.id}&imprimir=1`)}>
             <Printer size={16} /> Imprimir etiqueta
           </Button>
           {c?.phone && (

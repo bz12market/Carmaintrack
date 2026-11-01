@@ -26,6 +26,8 @@ create table if not exists workshops (
 
 -- Paleta de cores do painel e do portal (ver src/lib/theme.js).
 alter table workshops add column if not exists theme jsonb;
+-- Tamanhos de etiqueta personalizados: [{ "w": 70, "h": 40, "name": "..." }] em mm.
+alter table workshops add column if not exists label_sizes jsonb not null default '[]';
 
 create or replace function my_workshop_id() returns uuid
 language sql stable security definer set search_path = public as $$
