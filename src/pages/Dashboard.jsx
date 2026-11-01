@@ -115,9 +115,10 @@ export default function Dashboard() {
         )}
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {[
-          ["/veiculos", "Clientes e veículos", Users],
+          ["/clientes", "Clientes", Users],
+          ["/veiculos", "Veículos", Car],
           ["/lembretes", "Lembretes", Bell],
           ["/cartoes", "Etiquetas e QR", QrCode],
         ].map(([to, label, Icon]) => (

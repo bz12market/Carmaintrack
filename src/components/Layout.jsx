@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Home,
   Users,
+  Car,
   Bell,
   QrCode,
   Palette,
@@ -19,7 +20,8 @@ import DemoGuide from "./DemoGuide.jsx";
 
 const NAV = [
   { to: "/", label: "Início", icon: Home },
-  { to: "/veiculos", label: "Clientes e veículos", icon: Users },
+  { to: "/clientes", label: "Clientes", icon: Users },
+  { to: "/veiculos", label: "Veículos", icon: Car },
   { to: "/lembretes", label: "Lembretes", icon: Bell, badge: true },
   { to: "/cartoes", label: "Etiquetas e QR", icon: QrCode },
   { to: "/personalizar", label: "Personalizar", icon: Palette },

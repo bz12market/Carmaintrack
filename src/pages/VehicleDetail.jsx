@@ -19,45 +19,7 @@ import { navigate, href } from "../lib/router.js";
 import { fmtDate, fmtKm, portalUrl, reminderText, shareText, vehicleName, waLink } from "../lib/util.js";
 import { Button, Field, Link, Modal, Plate, StatusBadge, VehiclePhoto, Empty } from "../components/ui.jsx";
 import History from "../components/History.jsx";
-
-function ClientForm({ client, onClose }) {
-  const { save } = useStore();
-  const [c, setC] = useState(client);
-  const [busy, setBusy] = useState(false);
-  async function submit(e) {
-    e.preventDefault();
-    if (!c.name.trim()) return;
-    setBusy(true);
-    await save("clients", c);
-    onClose();
-  }
-  return (
-    <Modal title="Editar cliente" onClose={onClose}>
-      <form onSubmit={submit} className="space-y-3">
-        <Field label="Nome">
-          <input className="input" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-        </Field>
-        <Field label="Telemóvel / WhatsApp">
-          <input className="input" inputMode="tel" value={c.phone || ""} onChange={(e) => setC({ ...c, phone: e.target.value })} />
-        </Field>
-        <Field label="Email">
-          <input className="input" type="email" value={c.email || ""} onChange={(e) => setC({ ...c, email: e.target.value })} />
-        </Field>
-        <Field label="Notas internas">
-          <textarea className="input" value={c.notes || ""} onChange={(e) => setC({ ...c, notes: e.target.value })} />
-        </Field>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={busy}>
-            Guardar
-          </Button>
-        </div>
-      </form>
-    </Modal>
-  );
-}
+import VehiclePhotos from "../components/VehiclePhotos.jsx";
 
 function KmForm({ vehicle, onClose }) {
   const { save } = useStore();
@@ -145,7 +107,7 @@ export default function VehicleDetail({ id }) {
         </div>
       )}
       <Link to="/veiculos" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-        <ArrowLeft size={16} /> Clientes e veículos
+        <ArrowLeft size={16} /> Veículos
       </Link>
 
       <section className="card overflow-hidden">
@@ -162,10 +124,10 @@ export default function VehicleDetail({ id }) {
           <div>
             <p className="label">Proprietário</p>
             {c ? (
-              <button onClick={() => setModal({ type: "client" })} className="group text-left">
+              <Link to={`/clientes/${c.id}`} className="group block text-left">
                 <p className="font-semibold text-ink group-hover:underline">{c.name}</p>
                 <p className="text-sm text-muted">{c.phone || "sem telemóvel"}</p>
-              </button>
+              </Link>
             ) : (
               <button onClick={() => openRecord(v)} className="text-sm text-brand underline">
                 Associar proprietário
@@ -231,6 +193,8 @@ export default function VehicleDetail({ id }) {
         </div>
       </section>
 
+      <VehiclePhotos key={v.id} vehicle={v} />
+
       <section>
         <h2 className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">
           Histórico de revisões · {st.count} registo{st.count === 1 ? "" : "s"}
@@ -252,7 +216,6 @@ export default function VehicleDetail({ id }) {
         )}
       </section>
 
-      {modal?.type === "client" && <ClientForm client={c} onClose={() => setModal(null)} />}
       {modal?.type === "km" && <KmForm vehicle={v} onClose={() => setModal(null)} />}
     </div>
   );

@@ -6,11 +6,13 @@ import { StoreContext } from "./lib/store.js";
 import { vehicleStatus } from "./lib/util.js";
 import { applyTheme, normalizeTheme } from "./lib/theme.js";
 import Layout from "./components/Layout.jsx";
-import { RecordForm, ServiceForm } from "./components/forms.jsx";
+import { ClientForm, RecordForm, ServiceForm } from "./components/forms.jsx";
 import Login from "./pages/Login.jsx";
 import Portal from "./pages/Portal.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import Vehicles from "./pages/Vehicles.jsx";
+import Clients from "./pages/Clients.jsx";
+import ClientDetail from "./pages/ClientDetail.jsx";
 import VehicleDetail from "./pages/VehicleDetail.jsx";
 import Reminders from "./pages/Reminders.jsx";
 import Cards from "./pages/Cards.jsx";
@@ -166,7 +168,8 @@ function AdminApp({ path, url }) {
       remove,
       refresh,
       clientOf: (v) => data?.clients.find((c) => c.id === v?.client_id),
-      openRecord: (vehicle) => setModal({ type: "record", vehicle }),
+      openRecord: (vehicle, clientId) => setModal({ type: "record", vehicle, clientId }),
+      openClient: (client) => setModal({ type: "client", client }),
       openService: (vehicleId, service) => setModal({ type: "service", vehicleId, service }),
     }),
     [data, statuses, subscription, save, remove, refresh]
@@ -195,9 +198,12 @@ function AdminApp({ path, url }) {
   if (!data) return <Spinner />;
 
   const vehicleMatch = path.match(/^\/veiculos\/([^/]+)$/);
+  const clientMatch = path.match(/^\/clientes\/([^/]+)$/);
   let page;
   if (vehicleMatch) page = <VehicleDetail key={url} id={vehicleMatch[1]} />;
   else if (path === "/veiculos") page = <Vehicles />;
+  else if (clientMatch) page = <ClientDetail key={url} id={clientMatch[1]} />;
+  else if (path === "/clientes") page = <Clients />;
   else if (path === "/lembretes") page = <Reminders />;
   else if (path === "/cartoes") page = <Cards key={url} />;
   else if (path === "/personalizar") page = <Settings />;
@@ -210,7 +216,8 @@ function AdminApp({ path, url }) {
       <Layout path={path} email={session.user?.email}>
         {page}
       </Layout>
-      {modal?.type === "record" && <RecordForm vehicle={modal.vehicle} onClose={close} />}
+      {modal?.type === "record" && <RecordForm vehicle={modal.vehicle} clientId={modal.clientId} onClose={close} />}
+      {modal?.type === "client" && <ClientForm client={modal.client} onClose={close} />}
       {modal?.type === "service" && (
         <ServiceForm vehicleId={modal.vehicleId} service={modal.service} onClose={close} />
       )}

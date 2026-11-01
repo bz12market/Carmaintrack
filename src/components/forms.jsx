@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
-import { Plus, Trash2, ImagePlus } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Plus, Trash2, ImagePlus, Loader2, Search, CheckCircle2, Sparkles } from "lucide-react";
 import { useStore } from "../lib/store.js";
-import { DEMO_LIMITS, demoLimitMessage, isDemo } from "../lib/db.js";
+import { DEMO_LIMITS, demoLimitMessage, isDemo, lookupPlate } from "../lib/db.js";
 import { navigate } from "../lib/router.js";
 import {
   FILTERS,
@@ -17,14 +17,20 @@ import { Button, Field, Modal, VehiclePhoto } from "./ui.jsx";
 
 const toInt = (v) => (v === "" || v == null ? null : parseInt(String(v).replace(/\D/g, ""), 10));
 
-/** Novo registo (cliente + veículo) ou edição de um veículo existente. */
-export function RecordForm({ vehicle, onClose }) {
+// Matrícula portuguesa completa: 6 letras/algarismos em 3 pares.
+const isFullPlate = (p) => /^[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}$/.test(p);
+
+/**
+ * Novo registo (cliente + veículo) ou edição de um veículo existente.
+ * `clientId` pré-escolhe o proprietário (p.ex. "Adicionar veículo" na ficha do cliente).
+ */
+export function RecordForm({ vehicle, clientId: presetClientId, onClose }) {
   const { data, save, clientOf } = useStore();
   const editing = !!vehicle;
   const existingClient = editing ? clientOf(vehicle) : null;
 
-  const [clientMode, setClientMode] = useState(editing ? "existing" : "new");
-  const [clientId, setClientId] = useState(existingClient?.id || "");
+  const [clientMode, setClientMode] = useState(editing || presetClientId ? "existing" : "new");
+  const [clientId, setClientId] = useState(existingClient?.id || presetClientId || "");
   const [client, setClient] = useState({ name: "", phone: "", email: "" });
   const [v, setV] = useState(
     vehicle || { plate: "", make: "", model: "", year: "", current_km: "", photo_url: "", reminders_enabled: true }
@@ -34,6 +40,47 @@ export function RecordForm({ vehicle, onClose }) {
 
   const setField = (k) => (e) => setV((x) => ({ ...x, [k]: e.target.value }));
 
+  // Identificação automática pela matrícula: preenche marca, modelo/motor e ano;
+  // o utilizador só confirma (ou corrige, o que também conta como confirmação).
+  const [lookup, setLookup] = useState({ status: "idle" }); // idle | loading | found | notfound | off | error
+  const looked = useRef(editing ? normalizePlate(vehicle.plate) : "");
+
+  async function identify() {
+    const plate = normalizePlate(v.plate);
+    if (!isFullPlate(plate)) return setLookup({ status: "error", message: "Escreva a matrícula completa (AA-00-AA)." });
+    looked.current = plate;
+    setLookup({ status: "loading" });
+    try {
+      const r = await lookupPlate(plate);
+      if (looked.current !== plate) return; // entretanto foi pedida outra matrícula
+      if (!r.found) return setLookup({ status: "notfound" });
+      setV((x) => ({
+        ...x,
+        make: r.make || x.make,
+        model: [r.model, r.engine].filter(Boolean).join(" ") || x.model,
+        year: x.year || r.year || "",
+      }));
+      setLookup({ status: "found", data: r, confirmed: false });
+    } catch (e) {
+      setLookup(e.status === 501 ? { status: "off" } : { status: "error", message: e.message });
+    }
+  }
+
+  // Num registo novo, identifica assim que a matrícula estiver completa.
+  useEffect(() => {
+    const plate = normalizePlate(v.plate);
+    if (editing || !isFullPlate(plate) || plate === looked.current) return;
+    const timer = setTimeout(identify, 400);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [v.plate, editing]);
+
+  // Corrigir a marca ou o modelo à mão conta como confirmação.
+  const setIdentified = (k) => (e) => {
+    setField(k)(e);
+    if (lookup.status === "found") setLookup((l) => ({ ...l, confirmed: true }));
+  };
+
   async function submit(e) {
     e.preventDefault();
     setErr("");
@@ -42,6 +89,8 @@ export function RecordForm({ vehicle, onClose }) {
     const dup = data.vehicles.find((x) => normalizePlate(x.plate) === plate && x.id !== vehicle?.id);
     if (dup) return setErr(`Já existe um veículo com a matrícula ${plate}.`);
     if (clientMode === "new" && !client.name.trim()) return setErr("Indica o nome do cliente.");
+    if (lookup.status === "found" && !lookup.confirmed)
+      return setErr("Confirme se a marca e o modelo identificados pela matrícula estão corretos.");
     // Na demo, verifica os limites antes de gravar (para não ficar um cliente sem veículo).
     if (isDemo && !editing) {
       if (data.vehicles.length >= DEMO_LIMITS.vehicles) return setErr(demoLimitMessage("vehicles"));
@@ -147,22 +196,45 @@ export function RecordForm({ vehicle, onClose }) {
           <h3 className="text-sm font-bold text-ink">Veículo</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <Field label="Matrícula">
-              <input
-                className="input font-plate tracking-widest uppercase"
-                value={v.plate}
-                onChange={setField("plate")}
-                placeholder="AA-00-BB"
-                autoFocus={!editing}
-              />
+              <div className="flex gap-2">
+                <input
+                  className="input font-plate tracking-widest uppercase"
+                  value={v.plate}
+                  onChange={setField("plate")}
+                  onBlur={() => setV((x) => ({ ...x, plate: normalizePlate(x.plate) }))}
+                  placeholder="AA-00-BB"
+                  autoFocus={!editing}
+                />
+                <button
+                  type="button"
+                  onClick={identify}
+                  disabled={lookup.status === "loading"}
+                  className="flex shrink-0 items-center gap-1.5 rounded-xl border border-line bg-surface px-3 text-sm font-medium text-ink-2 hover:bg-ink/5 disabled:opacity-50"
+                  title="Identificar marca e modelo pela matrícula"
+                >
+                  {lookup.status === "loading" ? <Loader2 size={16} className="animate-spin" /> : <Search size={16} />}
+                  <span className="hidden sm:inline">Identificar</span>
+                </button>
+              </div>
             </Field>
             <Field label="Quilometragem atual">
               <input className="input" inputMode="numeric" value={v.current_km ?? ""} onChange={setField("current_km")} />
             </Field>
             <Field label="Marca">
-              <input className="input" value={v.make || ""} onChange={setField("make")} placeholder="Renault" />
+              <input
+                className={`input ${lookup.status === "found" && !lookup.confirmed ? "!border-warn" : ""}`}
+                value={v.make || ""}
+                onChange={setIdentified("make")}
+                placeholder="Renault"
+              />
             </Field>
             <Field label="Modelo / motor">
-              <input className="input" value={v.model || ""} onChange={setField("model")} placeholder="Captur 1.3 TCe" />
+              <input
+                className={`input ${lookup.status === "found" && !lookup.confirmed ? "!border-warn" : ""}`}
+                value={v.model || ""}
+                onChange={setIdentified("model")}
+                placeholder="Captur 1.3 TCe"
+              />
             </Field>
             <Field label="Ano">
               <input className="input" inputMode="numeric" value={v.year ?? ""} onChange={setField("year")} />
@@ -177,6 +249,11 @@ export function RecordForm({ vehicle, onClose }) {
               </label>
             </Field>
           </div>
+          <PlateLookupStatus
+            lookup={lookup}
+            vehicle={v}
+            onConfirm={() => setLookup((l) => ({ ...l, confirmed: true }))}
+          />
           <label className="flex items-center gap-2 text-sm text-ink-2">
             <input
               type="checkbox"
@@ -200,6 +277,94 @@ export function RecordForm({ vehicle, onClose }) {
         </div>
       </form>
     </Modal>
+  );
+}
+
+/** Novo cliente (sem `client`) ou edição dos dados de um cliente. */
+export function ClientForm({ client, onClose }) {
+  const { save } = useStore();
+  const editing = !!client?.id;
+  const [c, setC] = useState(client || { name: "", phone: "", email: "", notes: "" });
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState("");
+  const set = (k) => (e) => setC({ ...c, [k]: e.target.value });
+
+  async function submit(e) {
+    e.preventDefault();
+    setErr("");
+    if (!c.name.trim()) return setErr("Indique o nome do cliente.");
+    setBusy(true);
+    try {
+      const saved = await save("clients", { ...c, name: c.name.trim() });
+      onClose();
+      if (!editing) navigate(`/clientes/${saved.id}`);
+    } catch (e2) {
+      setErr(e2.message || String(e2));
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Modal title={editing ? "Editar cliente" : "Novo cliente"} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-3">
+        <Field label="Nome">
+          <input className="input" value={c.name} onChange={set("name")} placeholder="Ex.: Inês Martins" autoFocus={!editing} />
+        </Field>
+        <Field label="Telemóvel / WhatsApp">
+          <input className="input" inputMode="tel" value={c.phone || ""} onChange={set("phone")} placeholder="912 345 678" />
+        </Field>
+        <Field label="Email">
+          <input className="input" type="email" value={c.email || ""} onChange={set("email")} />
+        </Field>
+        <Field label="Notas internas">
+          <textarea className="input" value={c.notes || ""} onChange={set("notes")} />
+        </Field>
+        {err && <p className="rounded-xl bg-danger/10 px-3 py-2 text-sm text-danger">{err}</p>}
+        <div className="flex justify-end gap-2 pt-2">
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" disabled={busy}>
+            {editing ? "Guardar" : "Criar cliente"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+/** Resultado da identificação pela matrícula, com o botão de confirmação. */
+function PlateLookupStatus({ lookup, vehicle, onConfirm }) {
+  if (lookup.status === "loading")
+    return (
+      <p className="flex items-center gap-2 text-sm text-muted">
+        <Loader2 size={16} className="animate-spin" /> A identificar o veículo pela matrícula…
+      </p>
+    );
+  if (lookup.status === "notfound")
+    return <p className="text-sm text-muted">Não encontrámos esta matrícula. Preencha a marca e o modelo.</p>;
+  if (lookup.status === "error") return <p className="text-sm text-danger">{lookup.message}</p>;
+  if (lookup.status === "off")
+    return <p className="text-xs text-subtle">A identificação automática pela matrícula não está ativa. Preencha a marca e o modelo.</p>;
+  if (lookup.status !== "found") return null;
+  const summary = [vehicle.make, vehicle.model, vehicle.year].filter(Boolean).join(" · ");
+  if (lookup.confirmed)
+    return (
+      <p className="flex items-center gap-2 text-sm text-ok">
+        <CheckCircle2 size={16} /> Dados do veículo confirmados.
+      </p>
+    );
+  return (
+    <div className="flex flex-wrap items-center gap-3 rounded-xl border border-warn/40 bg-warn/10 px-3 py-2.5 text-sm">
+      <Sparkles size={18} className="shrink-0 text-warn" />
+      <p className="min-w-0 flex-1 text-ink">
+        Identificámos <b>{summary}</b>. Confirme se está correto ou corrija a marca e o modelo.
+        {lookup.data?.sample && <span className="block text-xs text-muted">Na demonstração, os dados são de exemplo.</span>}
+      </p>
+      <Button onClick={onConfirm} className="!py-2">
+        <CheckCircle2 size={16} /> Está correto
+      </Button>
+    </div>
   );
 }
 
