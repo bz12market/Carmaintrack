@@ -85,10 +85,28 @@ Para desligar um plano, muda `enabled` para `false`.
     Niimbot); na vertical: 60×100 e 50×80 mm (térmicas), 62×100 mm (Brother
     QL), 55×85 mm (cartão) e 40×60 mm (portáteis). As verticais têm a marca
     no topo, a matrícula, o QR ao centro e a próxima revisão em baixo.
+    Em **Personalizar → Tamanhos de etiqueta** acrescentam-se tamanhos
+    personalizados (largura × altura em mm, mínimo 25 × 35 mm), guardados na
+    oficina (`workshops.label_sizes`) e mostrados no grupo "Personalizados".
   - **Cópias** por veículo, e descarregar só o QR em PNG.
 
-  Na janela de impressão, escolhe a impressora e o papel com o mesmo tamanho,
-  margens "Nenhuma", escala 100% e desativa "Cabeçalhos e rodapés".
+  Todas as etiquetas mostram os **quilómetros e a data** da próxima revisão
+  ("—" se faltar algum); nas pequenas o texto encolhe para caber ao lado do QR.
+
+  **Impressão direta (sem janela de impressão):** os browsers não deixam um
+  site imprimir sem mostrar a janela de impressão, por isso a app usa o
+  [QZ Tray](https://qz.io/download/), um programa gratuito instalado no
+  computador da oficina. Em **Personalizar → Impressão direta** procura-se a
+  impressora, escolhe-se a resolução (203/300/600 dpi) e liga-se "Imprimir
+  diretamente" (fica guardado nesse computador). A partir daí, "Imprimir" (e o
+  "Imprimir etiqueta" da ficha do veículo) converte cada etiqueta numa imagem
+  do tamanho exato e envia-a para a impressora (só em "Rolo de etiquetas").
+  Alternativa sem instalar nada: abrir o Chrome com `--kiosk-printing`, que
+  imprime sem janela na impressora predefinida.
+
+  Sem impressão direta, na janela de impressão escolhe a impressora e o papel
+  com o mesmo tamanho, margens "Nenhuma", escala 100% e desativa "Cabeçalhos
+  e rodapés".
 - **Personalizar**: logótipo, nome, slogan, telefone, WhatsApp e morada;
   intervalo padrão de revisão (km/meses) e limites de aviso (km/dias); estado
   da subscrição.
@@ -141,6 +159,7 @@ As funções de pagamento (`/api/...`) só correm com a Vercel CLI:
 | `STRIPE_PRICE_ANUAL` | o preço anual (`price_...`) |
 | `STRIPE_TAX_RATE_ID` | Stripe → Product catalog → Tax rates → IVA 23% (`txr_...`) |
 | `APP_URL` | (opcional) o endereço público, se usares domínio próprio |
+| `QZ_CERTIFICATE` / `QZ_PRIVATE_KEY` | (opcional) certificado e chave privada (PEM) para o QZ Tray não pedir autorização; ver abaixo |
 
 Depois de mudar variáveis, faz **Redeploy** da produção.
 
@@ -192,6 +211,21 @@ on conflict (user_id) do update set status = 'active';
    (cartão e débito direto SEPA funcionam com subscrições).
 6. Testa primeiro em **modo de teste** (chaves `sk_test_...`, cartão
    `4242 4242 4242 4242`) e só depois muda para as chaves reais.
+
+### QZ Tray sem pedidos de autorização (opcional)
+
+Sem certificado, o QZ Tray pergunta "Allow" quando a app se liga a ele (uma vez
+por sessão). Para deixar de perguntar:
+
+1. Gera um certificado e uma chave, por exemplo:
+   `openssl req -x509 -newkey rsa:2048 -keyout chave.pem -out certificado.pem -days 3650 -nodes -subj "/CN=Carmaintrack"`
+2. Na Vercel, define `QZ_CERTIFICATE` (conteúdo de `certificado.pem`) e
+   `QZ_PRIVATE_KEY` (conteúdo de `chave.pem`) e faz Redeploy. A assinatura só
+   é feita para contas com sessão iniciada (`api/qz-sign.js`).
+3. Em cada computador das oficinas, o QZ Tray tem de confiar nesse
+   certificado: copia `certificado.pem` para a pasta do QZ Tray com o nome
+   `override.crt` e reinicia-o (ou usa um certificado comprado à QZ, que
+   dispensa este passo).
 
 ## Próximas fases (ainda não incluídas)
 

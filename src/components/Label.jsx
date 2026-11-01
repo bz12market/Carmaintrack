@@ -22,6 +22,40 @@ export const LABEL_SIZES = [
 
 export const isVertical = (size) => size.h > size.w;
 
+// Tamanhos personalizados, criados em Personalizar e guardados na oficina
+// (workshops.label_sizes = [{ w, h, name? }]).
+// Abaixo de 25 mm (lado menor) / 35 mm (lado maior) a matrícula, os km, a data
+// e o QR deixam de caber de forma legível.
+export const CUSTOM_LIMITS = { minShort: 25, minLong: 35, maxW: 210, maxH: 300 };
+
+/** Mensagem de erro para um tamanho personalizado inválido (ou "" se for válido). */
+export function customSizeError(w, h) {
+  const { minShort, minLong, maxW, maxH } = CUSTOM_LIMITS;
+  if (!(w > 0 && h > 0)) return "Indique a largura e a altura em milímetros.";
+  if (w > maxW || h > maxH) return `O máximo é ${maxW} mm de largura e ${maxH} mm de altura.`;
+  if (Math.min(w, h) < minShort || Math.max(w, h) < minLong)
+    return `A etiqueta tem de ter pelo menos ${minShort} × ${minLong} mm para caberem a matrícula, os km, a data e o QR.`;
+  return "";
+}
+
+export function customSizes(workshop) {
+  const list = Array.isArray(workshop?.label_sizes) ? workshop.label_sizes : [];
+  return list
+    .map((s) => ({ w: Math.round(Number(s.w)), h: Math.round(Number(s.h)), name: String(s.name || "").trim() }))
+    .filter((s) => !customSizeError(s.w, s.h))
+    .map((s) => ({
+      id: `c-${s.w}x${s.h}`,
+      name: `${s.w} × ${s.h} mm`,
+      w: s.w,
+      h: s.h,
+      hint: s.name || `Personalizado (${isVertical(s) ? "vertical" : "horizontal"})`,
+      custom: true,
+    }));
+}
+
+/** Tamanhos predefinidos + personalizados da oficina. */
+export const allSizes = (workshop) => [...LABEL_SIZES, ...customSizes(workshop)];
+
 export function useQr(text) {
   const [src, setSrc] = useState("");
   useEffect(() => {
@@ -30,9 +64,36 @@ export function useQr(text) {
   return src;
 }
 
-export function nextLine(st) {
-  const parts = [st?.nextKm != null && fmtKm(st.nextKm), st?.nextDate && fmtDate(st.nextDate)].filter(Boolean);
-  return parts.length ? `Próxima: ${parts.join(" ou ")}` : "";
+/** Quilómetros e data da próxima revisão ("—" quando não estão definidos). */
+export function nextParts(st) {
+  return {
+    km: st?.nextKm != null ? fmtKm(st.nextKm) : "— km",
+    date: st?.nextDate ? fmtDate(st.nextDate) : "—",
+  };
+}
+
+/**
+ * Próxima revisão, sempre com quilómetros e data. Cada valor nunca é partido
+ * a meio: se não couberem lado a lado, a data passa para a linha seguinte.
+ */
+function NextService({ status, size, compact, align = "left", sub, prefix = true }) {
+  const { km, date } = nextParts(status);
+  return (
+    <div className="leading-tight" style={{ textAlign: align }}>
+      {!compact && (
+        <p className="font-semibold uppercase" style={{ fontSize: mm(size * 0.72), color: sub, letterSpacing: "0.04em" }}>
+          Próxima revisão
+        </p>
+      )}
+      <p
+        className="flex flex-wrap font-extrabold"
+        style={{ fontSize: mm(size), columnGap: mm(size * 0.5), justifyContent: align === "center" ? "center" : "flex-start" }}
+      >
+        <span className="whitespace-nowrap">{compact && prefix ? `Próx.: ${km}` : km}</span>
+        <span className="whitespace-nowrap">{date}</span>
+      </p>
+    </div>
+  );
 }
 
 /**
@@ -100,8 +161,9 @@ function VerticalLabel({ vehicle, workshop, status, size, mode = "color", qrUrl 
   const qr = useQr(qrUrl || portalUrl(vehicle.public_token));
   const { w, h } = size;
   const mono = mode === "mono";
-  const u = w / 60;
-  const compact = w < 45;
+  // Escala pelo design base 60×100, limitada pela altura em etiquetas largas.
+  const u = Math.min(w / 60, h / 100);
+  const compact = w < 45 || h < 60;
   const pad = Math.max(2, 3.5 * u);
   const inner = w - pad * 2;
   const plateSize = Math.min(9 * u, inner / (Math.max(vehicle.plate.length, 6) * 0.72));
@@ -110,7 +172,6 @@ function VerticalLabel({ vehicle, workshop, status, size, mode = "color", qrUrl 
   const qrPad = 2 * u;
   const qrImg = qrBox - qrPad * 2;
   const sub = mono ? "#000" : "rgba(255,255,255,.75)";
-  const next = nextLine(status);
 
   return (
     <div className="carmaintrack-label relative flex flex-col overflow-hidden" style={frameStyle({ w, h, mono, u })}>
@@ -171,9 +232,7 @@ function VerticalLabel({ vehicle, workshop, status, size, mode = "color", qrUrl 
           </span>
         )}
 
-        <p className="leading-tight font-semibold" style={{ fontSize: mm(Math.max(2.1, 2.6 * u)) }}>
-          {next || "Leia o código para ver o histórico"}
-        </p>
+        <NextService status={status} size={Math.max(2.1, 2.7 * u)} compact={compact} align="center" sub={sub} />
       </div>
     </div>
   );
@@ -185,7 +244,9 @@ function HorizontalLabel({ vehicle, workshop, status, size, mode = "color", qrUr
   const { w, h } = size;
   const mono = mode === "mono";
   const compact = h < 40;
-  const u = h / 60; // unidade relativa ao design base de 100×60
+  // Unidade relativa ao design base de 100×60, limitada pela largura em
+  // etiquetas quase quadradas (tamanhos personalizados).
+  const u = Math.min(h / 60, w / 100);
   const pad = Math.max(2, 3.5 * u);
   // QR no máximo ~38% da largura, para sobrar espaço para a matrícula.
   const qrBox = Math.min(h - pad * 2, w * (compact ? 0.42 : 0.38));
@@ -195,14 +256,20 @@ function HorizontalLabel({ vehicle, workshop, status, size, mode = "color", qrUr
   const qrPad = compact ? 1 : 2 * u;
   const qrImg = qrBox - qrPad * 2 - (compact ? 0 : 2.6 * u);
   const sub = mono ? "#000" : "rgba(255,255,255,.75)";
-  const next = nextLine(status);
+  // Os km e a data têm sempre de caber ao lado do QR: em etiquetas pequenas o
+  // texto encolhe e, se preciso, perde o "Próx.:" (≈0,62 em por carácter).
+  const nextSize = Math.min(compact ? 2.2 : Math.max(2.2, 2.6 * u), textW / (10 * 0.62));
+  const nextPrefix = textW >= 16 * 0.62 * nextSize;
 
   return (
     <div className="carmaintrack-label relative flex overflow-hidden" style={frameStyle({ w, h, mono, u })}>
       {/* faixa superior */}
       <div className="absolute inset-x-0 top-0" style={{ height: mm(1.6 * u), background: mono ? "#000" : "var(--brand)" }} />
 
-      <div className="flex min-w-0 flex-1 flex-col justify-between" style={{ padding: mm(pad), paddingTop: mm(pad + 1.2 * u) }}>
+      <div
+        className="label-text flex min-w-0 flex-1 flex-col justify-between"
+        style={{ padding: mm(pad), paddingTop: mm(pad + 1.2 * u) }}
+      >
         <div className="flex min-w-0 items-center" style={{ gap: mm(1.5 * u) }}>
           {!compact && <LogoMark workshop={workshop} mono={mono} size={7 * u} />}
           <div className="min-w-0 leading-tight">
@@ -245,9 +312,7 @@ function HorizontalLabel({ vehicle, workshop, status, size, mode = "color", qrUr
           </span>
         )}
 
-        <p className="leading-tight font-semibold" style={{ fontSize: mm(compact ? 2.3 : Math.max(2.2, 2.5 * u)) }}>
-          {next || "Leia o código para ver o histórico"}
-        </p>
+        <NextService status={status} size={nextSize} compact={compact} sub={sub} prefix={nextPrefix} />
       </div>
 
       <div className="flex shrink-0 items-center" style={{ paddingRight: mm(pad) }}>

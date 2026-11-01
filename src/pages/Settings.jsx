@@ -6,6 +6,8 @@ import { resizeImage } from "../lib/util.js";
 import { Button, Field } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
 import ThemePicker from "../components/ThemePicker.jsx";
+import LabelSizes from "../components/LabelSizes.jsx";
+import PrintSetup from "../components/PrintSetup.jsx";
 import { applyTheme, normalizeTheme } from "../lib/theme.js";
 
 const themeOf = (ws) => normalizeTheme(ws.theme, ws.primary_color);
@@ -22,6 +24,12 @@ export default function Settings() {
   const saved = useRef(data.workshop);
   saved.current = data.workshop;
   useEffect(() => () => applyTheme(themeOf(saved.current)), []);
+
+  // Links para uma secção (p.ex. /personalizar#etiquetas).
+  useEffect(() => {
+    const id = window.location.hash.slice(1);
+    if (id) requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }));
+  }, []);
 
   function setTheme(t) {
     const { id, name, mode, bg, surface, ink, brand, accent } = t;
@@ -120,11 +128,23 @@ export default function Settings() {
         </div>
       </section>
 
+      <section id="etiquetas" className="card scroll-mt-20 space-y-4 p-5">
+        <div>
+          <h2 className="font-bold text-ink">Tamanhos de etiqueta</h2>
+          <p className="text-sm text-muted">
+            Além dos tamanhos de origem, acrescente os das suas etiquetas. Aparecem em "Etiquetas e QR", no grupo
+            "Personalizados". Indique a largura e a altura tal como a etiqueta sai da impressora.
+          </p>
+        </div>
+        <LabelSizes value={w.label_sizes} onChange={(label_sizes) => setW({ ...w, label_sizes })} />
+      </section>
+
       <div className="flex justify-end">
         <Button type="submit" disabled={busy}>
           {ok ? <Check size={16} /> : null} {ok ? "Guardado" : "Guardar alterações"}
         </Button>
       </div>
+      <PrintSetup />
       <SubscriptionPanel subscription={subscription} />
     </form>
   );
