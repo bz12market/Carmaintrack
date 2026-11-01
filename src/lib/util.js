@@ -121,8 +121,8 @@ export function shareText(vehicle, workshop, clientName) {
   );
 }
 
-/** Lê uma imagem e reduz para caber em `max`px, devolvendo um data URL JPEG/PNG. */
-export function resizeImage(file, max, type = "image/jpeg") {
+/** Lê uma imagem (File/Blob) e reduz para caber em `max`px, devolvendo um data URL JPEG/PNG. */
+export function resizeImage(file, max, type = "image/jpeg", quality = 0.82) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
@@ -135,7 +135,7 @@ export function resizeImage(file, max, type = "image/jpeg") {
         canvas.width = Math.round(img.width * scale);
         canvas.height = Math.round(img.height * scale);
         canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
-        resolve(canvas.toDataURL(type, 0.82));
+        resolve(canvas.toDataURL(type, quality));
       };
       img.src = reader.result;
     };
@@ -143,4 +143,8 @@ export function resizeImage(file, max, type = "image/jpeg") {
   });
 }
 
-export const normalizePlate = (p) => p.toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9-]/g, "");
+/** Matrícula em maiúsculas; 6 letras/algarismos seguidos ficam no formato AA-00-AA. */
+export function normalizePlate(p) {
+  const clean = String(p || "").toUpperCase().replace(/\s+/g, "").replace(/[^A-Z0-9-]/g, "");
+  return /^[A-Z0-9]{6}$/.test(clean) ? clean.replace(/^(..)(..)(..)$/, "$1-$2-$3") : clean;
+}
