@@ -71,15 +71,36 @@ export function demoSeed() {
       s("s1", "v1", day(-530), 31400, "Elf Evolution 900 SXR 5W-30", ["Filtro de óleo"], 46400, day(-165)),
       s("s2", "v1", day(-310), 46400, "Elf Evolution 900 SXR 5W-30", ["Filtro de óleo", "Filtro de ar"], 61400, day(-45), {
         title: "Revisão",
-        notes: "Pastilhas da frente a 40%.",
+        notes: "Revisão completa: óleo e filtros, travões, suspensão e níveis verificados.",
+        extras: [
+          { name: "Travões", note: "pastilhas da frente a 40%, discos em bom estado" },
+          { name: "Suspensão", note: "amortecedores e casquilhos em bom estado" },
+          { name: "Arrefecimento", note: "líquido atestado" },
+          { name: "Limpa-vidros", note: "escovas substituídas" },
+        ],
       }),
       s("s3", "v2", day(-420), 7600, "Selenia K Pure Energy 0W-30", ["Filtro de óleo"], 22600, day(-55)),
-      s("s4", "v2", day(-20), 22600, "Selenia K Pure Energy 0W-30", ["Filtro de óleo", "Filtro de habitáculo"], 37600, day(345)),
+      s("s4", "v2", day(-20), 22600, "Selenia K Pure Energy 0W-30", ["Filtro de óleo", "Filtro de habitáculo"], 37600, day(345), {
+        extras: [
+          { name: "Ar condicionado", note: "carga de gás e desinfeção" },
+          { name: "Bateria", note: "testada, 92%" },
+        ],
+      }),
       s("s5", "v3", day(-340), 103900, "Castrol Edge 5W-30 LL", ["Filtro de óleo", "Filtro de combustível"], 118900, day(25), {
         title: "Revisão",
-        extras: [{ name: "Diagnóstico eletrónico", note: "Aviso de manutenção reposto" }],
+        extras: [
+          { name: "Diagnóstico", note: "aviso de manutenção reposto" },
+          { name: "Pneus", note: "dianteiros substituídos, pressões verificadas" },
+          { name: "Alinhamento e equilibragem", note: "feito" },
+        ],
       }),
-      s("s6", "v4", day(-200), 89000, "Total Quartz Ineo 0W-30", ["Filtro de óleo", "Filtro de ar"], 104000, day(165)),
+      s("s6", "v4", day(-200), 89000, "Total Quartz Ineo 0W-30", ["Filtro de óleo", "Filtro de ar", "Filtro de combustível"], 104000, day(165), {
+        title: "Revisão",
+        extras: [
+          { name: "Velas / ignição", note: "4 velas substituídas" },
+          { name: "Luzes", note: "todas a funcionar" },
+        ],
+      }),
     ],
   };
 }

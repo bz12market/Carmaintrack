@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Search, Car } from "lucide-react";
+import { Search, Car, Plus } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { fmtKm, vehicleName } from "../lib/util.js";
 import { Link, StatusBadge, VehiclePhoto, Plate, Empty, Button } from "../components/ui.jsx";
@@ -36,25 +36,28 @@ export default function Vehicles() {
           <Search className="absolute top-1/2 left-3 -translate-y-1/2 text-subtle" size={18} />
           <input className="input pl-10" placeholder="Pesquisar" value={q} onChange={(e) => setQ(e.target.value)} />
         </div>
-        <div className="flex gap-1.5 overflow-x-auto">
-          {FILTERS.map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => setFilter(k)}
-              className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${
-                filter === k ? "bg-brand text-on-brand" : "bg-ink/5 text-muted"
-              }`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
+        <Button onClick={() => openRecord()}>
+          <Plus size={16} /> Novo veículo
+        </Button>
+      </div>
+      <div className="flex gap-1.5 overflow-x-auto">
+        {FILTERS.map(([k, l]) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k)}
+            className={`shrink-0 rounded-full px-3 py-2 text-xs font-semibold ${
+              filter === k ? "bg-brand text-on-brand" : "bg-ink/5 text-muted"
+            }`}
+          >
+            {l}
+          </button>
+        ))}
       </div>
 
       {data.vehicles.length === 0 ? (
         <Empty icon={Car} title="Ainda não há veículos">
           <Button className="mt-3" onClick={() => openRecord()}>
-            Novo registo
+            Novo veículo
           </Button>
         </Empty>
       ) : list.length === 0 ? (

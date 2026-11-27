@@ -8,54 +8,33 @@ import {
   Pencil,
   Trash2,
   Phone,
-  Gauge,
-  CalendarClock,
   Check,
   Printer,
   X,
 } from "lucide-react";
 import { useStore } from "../lib/store.js";
 import { navigate, href } from "../lib/router.js";
-import { fmtDate, fmtKm, portalUrl, reminderText, shareText, vehicleName, waLink } from "../lib/util.js";
+import { filterIcon, filterList, filterNames, fmtDate, fmtKm, portalUrl, reminderText, shareText, vehicleName, waLink } from "../lib/util.js";
 import { Button, Field, Link, Modal, Plate, StatusBadge, VehiclePhoto, Empty } from "../components/ui.jsx";
 import History from "../components/History.jsx";
+import VehiclePhotos from "../components/VehiclePhotos.jsx";
+import PartIcon from "../components/PartIcons.jsx";
 
-function ClientForm({ client, onClose }) {
-  const { save } = useStore();
-  const [c, setC] = useState(client);
-  const [busy, setBusy] = useState(false);
-  async function submit(e) {
-    e.preventDefault();
-    if (!c.name.trim()) return;
-    setBusy(true);
-    await save("clients", c);
-    onClose();
-  }
+/** Mosaico com ícone ilustrado (quilometragem, óleo, filtros, ...). */
+function Stat({ icon, label, value, sub, onClick, accent }) {
+  const Tag = onClick ? "button" : "div";
   return (
-    <Modal title="Editar cliente" onClose={onClose}>
-      <form onSubmit={submit} className="space-y-3">
-        <Field label="Nome">
-          <input className="input" value={c.name} onChange={(e) => setC({ ...c, name: e.target.value })} />
-        </Field>
-        <Field label="Telemóvel / WhatsApp">
-          <input className="input" inputMode="tel" value={c.phone || ""} onChange={(e) => setC({ ...c, phone: e.target.value })} />
-        </Field>
-        <Field label="Email">
-          <input className="input" type="email" value={c.email || ""} onChange={(e) => setC({ ...c, email: e.target.value })} />
-        </Field>
-        <Field label="Notas internas">
-          <textarea className="input" value={c.notes || ""} onChange={(e) => setC({ ...c, notes: e.target.value })} />
-        </Field>
-        <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose}>
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={busy}>
-            Guardar
-          </Button>
-        </div>
-      </form>
-    </Modal>
+    <Tag
+      onClick={onClick}
+      className={`card flex min-w-0 items-center gap-3 p-3 text-left ${onClick ? "transition hover:border-brand/60" : ""}`}
+    >
+      <PartIcon name={icon} size={44} />
+      <div className="min-w-0">
+        <p className="text-[11px] font-semibold tracking-wider text-subtle uppercase">{label}</p>
+        <p className={`font-bold leading-tight ${accent ? "text-brand" : "text-ink"}`}>{value}</p>
+        {sub && <p className="truncate text-xs text-subtle">{sub}</p>}
+      </div>
+    </Tag>
   );
 }
 
@@ -145,7 +124,7 @@ export default function VehicleDetail({ id }) {
         </div>
       )}
       <Link to="/veiculos" className="inline-flex items-center gap-1.5 text-sm text-muted hover:text-ink">
-        <ArrowLeft size={16} /> Clientes e veículos
+        <ArrowLeft size={16} /> Veículos
       </Link>
 
       <section className="card overflow-hidden">
@@ -158,42 +137,18 @@ export default function VehicleDetail({ id }) {
           </div>
           <StatusBadge status={st.status} className="absolute top-3 right-3 !bg-black/60" />
         </div>
-        <div className="grid gap-4 p-4 sm:grid-cols-3">
+        <div className="p-4">
           <div>
             <p className="label">Proprietário</p>
             {c ? (
-              <button onClick={() => setModal({ type: "client" })} className="group text-left">
+              <Link to={`/clientes/${c.id}`} className="group block text-left">
                 <p className="font-semibold text-ink group-hover:underline">{c.name}</p>
                 <p className="text-sm text-muted">{c.phone || "sem telemóvel"}</p>
-              </button>
+              </Link>
             ) : (
               <button onClick={() => openRecord(v)} className="text-sm text-brand underline">
                 Associar proprietário
               </button>
-            )}
-          </div>
-          <div>
-            <p className="label">Quilometragem atual</p>
-            <button onClick={() => setModal({ type: "km" })} className="flex items-center gap-2 font-semibold text-ink hover:underline">
-              <Gauge size={16} className="text-muted" /> {fmtKm(v.current_km)}
-            </button>
-          </div>
-          <div>
-            <p className="label">Próxima revisão</p>
-            <p className="flex items-center gap-2 font-semibold text-ink">
-              <CalendarClock size={16} className="text-muted" />
-              {[st.nextKm != null && fmtKm(st.nextKm), st.nextDate && fmtDate(st.nextDate)].filter(Boolean).join(" · ") ||
-                "—"}
-            </p>
-            {st.status !== "none" && (
-              <p className="text-xs text-subtle">
-                {[
-                  st.kmLeft != null && (st.kmLeft >= 0 ? `faltam ${fmtKm(st.kmLeft)}` : `passou ${fmtKm(-st.kmLeft)}`),
-                  st.daysLeft != null && (st.daysLeft >= 0 ? `faltam ${st.daysLeft} dias` : `há ${-st.daysLeft} dias`),
-                ]
-                  .filter(Boolean)
-                  .join(" · ")}
-              </p>
             )}
           </div>
         </div>
@@ -231,7 +186,39 @@ export default function VehicleDetail({ id }) {
         </div>
       </section>
 
-      <section>
+      <section className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-4">
+        <Stat icon="gauge" label="Quilometragem atual" value={fmtKm(v.current_km)} sub="Toque para atualizar" onClick={() => setModal({ type: "km" })} />
+        <Stat icon="history" label="Última revisão" value={st.last ? fmtDate(st.last.date) : "—"} sub={st.last?.title} />
+        <Stat
+          icon="calendar"
+          label="Próxima revisão"
+          accent
+          value={[st.nextKm != null && fmtKm(st.nextKm), st.nextDate && fmtDate(st.nextDate)].filter(Boolean).join(" · ") || "—"}
+          sub={
+            st.status !== "none"
+              ? [
+                  st.kmLeft != null && (st.kmLeft >= 0 ? `faltam ${fmtKm(st.kmLeft)}` : `passou ${fmtKm(-st.kmLeft)}`),
+                  st.daysLeft != null && (st.daysLeft >= 0 ? `faltam ${st.daysLeft} dias` : `há ${-st.daysLeft} dias`),
+                ]
+                  .filter(Boolean)
+                  .join(" · ")
+              : null
+          }
+        />
+        <Stat icon="oil" label="Último óleo" value={st.last?.oil || "—"} />
+        <Stat
+          icon={st.last?.filters?.length ? filterIcon(filterNames(st.last.filters)[0]) : "oilFilter"}
+          label="Filtros"
+          value={st.last?.filters?.length ? filterList(st.last.filters) : "—"}
+        />
+        <Stat icon="inspection" label="Serviços adicionais" value={st.last?.extras?.length ? `${st.last.extras.length} na última visita` : "—"} />
+        <Stat icon="service" label="Histórico" value={`${st.count} registo${st.count === 1 ? "" : "s"}`} onClick={() => document.getElementById("historico")?.scrollIntoView({ behavior: "smooth" })} />
+        <Stat icon="camera" label="Fotografias" value="Ver e tirar fotos" onClick={() => document.getElementById("fotos")?.scrollIntoView({ behavior: "smooth" })} />
+      </section>
+
+      <VehiclePhotos key={v.id} vehicle={v} />
+
+      <section id="historico" className="scroll-mt-20">
         <h2 className="mb-3 text-sm font-bold tracking-wide text-muted uppercase">
           Histórico de revisões · {st.count} registo{st.count === 1 ? "" : "s"}
         </h2>
@@ -252,7 +239,6 @@ export default function VehicleDetail({ id }) {
         )}
       </section>
 
-      {modal?.type === "client" && <ClientForm client={c} onClose={() => setModal(null)} />}
       {modal?.type === "km" && <KmForm vehicle={v} onClose={() => setModal(null)} />}
     </div>
   );

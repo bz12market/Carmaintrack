@@ -1,10 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   Loader2,
-  Droplet,
-  Filter,
-  CalendarClock,
-  History as HistoryIcon,
   AlertTriangle,
   Zap,
   MessageCircle,
@@ -15,17 +11,16 @@ import {
 } from "lucide-react";
 import { getPublicVehicle } from "../lib/db.js";
 import { applyTheme, normalizeTheme } from "../lib/theme.js";
-import { STATUS, filterNames, fmtDate, fmtKm, vehicleName, vehicleStatus, waLink } from "../lib/util.js";
+import { STATUS, filterIcon, filterList, filterNames, fmtDate, fmtKm, vehicleName, vehicleStatus, waLink } from "../lib/util.js";
 import { Plate, VehiclePhoto } from "../components/ui.jsx";
 import { Logo } from "../components/Layout.jsx";
 import History from "../components/History.jsx";
+import PartIcon from "../components/PartIcons.jsx";
 
-function Tile({ icon: Icon, label, value }) {
+function Tile({ icon, label, value }) {
   return (
-    <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-4">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand/15">
-        <Icon size={22} className="text-brand" />
-      </div>
+    <div className="flex items-center gap-4 rounded-2xl border border-line bg-surface px-4 py-3">
+      <PartIcon name={icon} size={46} />
       <div className="min-w-0">
         <p className="text-[11px] font-semibold tracking-widest text-subtle uppercase">{label}</p>
         <p className="font-semibold text-ink">{value}</p>
@@ -110,11 +105,15 @@ export default function Portal({ token }) {
         <section className="card divide-y divide-line px-4">
           {owner_name && <p className="py-3 text-ink-2">Proprietário: {owner_name}</p>}
           <div className="flex items-center justify-between py-3">
-            <span className="text-sm text-muted">Quilometragem atual</span>
+            <span className="flex items-center gap-2 text-sm text-muted">
+              <PartIcon name="gauge" size={30} /> Quilometragem atual
+            </span>
             <span className="text-xl font-bold text-ink">{fmtKm(vehicle.current_km).replace(" km", "")}</span>
           </div>
           <div className="flex items-center justify-between py-3">
-            <span className="text-sm text-muted">Revisões</span>
+            <span className="flex items-center gap-2 text-sm text-muted">
+              <PartIcon name="service" size={30} /> Revisões
+            </span>
             <span className="text-xl font-bold text-brand">{st.count}</span>
           </div>
           <div className="flex items-center justify-between py-3">
@@ -125,16 +124,19 @@ export default function Portal({ token }) {
           </div>
         </section>
 
-        {st.last?.oil && <Tile icon={Droplet} label="Óleo utilizado" value={st.last.oil} />}
-        {st.last?.filters?.length > 0 && <Tile icon={Filter} label="Filtros" value={filterNames(st.last.filters).join(", ")} />}
+        {st.last && <Tile icon="history" label="Última revisão" value={`${fmtDate(st.last.date)} · ${fmtKm(st.last.km)}`} />}
+        {st.last?.oil && <Tile icon="oil" label="Óleo utilizado" value={st.last.oil} />}
+        {st.last?.filters?.length > 0 && (
+          <Tile icon={filterIcon(filterNames(st.last.filters)[0])} label="Filtros" value={filterList(st.last.filters)} />
+        )}
         {(st.nextKm != null || st.nextDate) && (
           <Tile
-            icon={CalendarClock}
+            icon="calendar"
             label="Próxima revisão"
             value={[st.nextKm != null && fmtKm(st.nextKm), st.nextDate && fmtDate(st.nextDate)].filter(Boolean).join(" · ")}
           />
         )}
-        <Tile icon={HistoryIcon} label="Histórico" value={`${st.count} registo${st.count === 1 ? "" : "s"}`} />
+        <Tile icon="service" label="Histórico" value={`${st.count} registo${st.count === 1 ? "" : "s"}`} />
 
         {(st.status === "overdue" || st.status === "soon") && (
           <section

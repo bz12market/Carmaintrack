@@ -1,10 +1,13 @@
-import { Gauge, Droplet, Filter, MessageSquare, CheckCircle2, ArrowRight, Pencil, Trash2 } from "lucide-react";
-import { filterNames, fmtDate, fmtKm } from "../lib/util.js";
+import { MessageSquare, CheckCircle2, ArrowRight, Pencil, Trash2 } from "lucide-react";
+import { filterIcon, filterList, filterNames, fmtDate, fmtKm, serviceIcon } from "../lib/util.js";
+import PartIcon from "./PartIcons.jsx";
 
-function Row({ icon: Icon, label, value }) {
+const TITLE_ICON = { "Mudança de óleo": "oil", Revisão: "service", Reparação: "other", "Inspeção pré-IPO": "inspection" };
+
+function Row({ icon, label, value }) {
   return (
     <div className="flex items-center gap-3 rounded-xl border border-line/60 bg-field px-3 py-2.5">
-      <Icon size={18} className="shrink-0 text-muted" />
+      <PartIcon name={icon} size={36} />
       <div className="min-w-0">
         <p className="text-[11px] font-semibold tracking-wider text-subtle uppercase">{label}</p>
         <p className="text-sm text-ink">{value}</p>
@@ -24,6 +27,7 @@ export default function History({ services, onEdit, onDelete }) {
             <div className="mb-3 flex items-start justify-between gap-2">
               <div>
                 <div className="flex flex-wrap items-center gap-2">
+                  <PartIcon name={TITLE_ICON[s.title] || serviceIcon(s.title)} size={28} />
                   {i === 0 && (
                     <span className="rounded-full bg-brand/20 px-2 py-0.5 text-xs font-semibold text-brand">Mais recente</span>
                   )}
@@ -47,9 +51,11 @@ export default function History({ services, onEdit, onDelete }) {
               )}
             </div>
             <div className="grid gap-2 sm:grid-cols-3">
-              <Row icon={Gauge} label="Quilometragem" value={fmtKm(s.km)} />
-              {s.oil && <Row icon={Droplet} label="Óleo" value={s.oil} />}
-              {s.filters?.length > 0 && <Row icon={Filter} label="Filtros" value={filterNames(s.filters).join(", ")} />}
+              <Row icon="gauge" label="Quilometragem" value={fmtKm(s.km)} />
+              {s.oil && <Row icon="oil" label="Óleo" value={s.oil} />}
+              {s.filters?.length > 0 && (
+                <Row icon={filterIcon(filterNames(s.filters)[0])} label="Filtros" value={filterList(s.filters)} />
+              )}
             </div>
             {s.notes && (
               <p className="mt-3 flex gap-2 border-t border-line/60 pt-3 text-sm text-ink-2">
@@ -58,12 +64,13 @@ export default function History({ services, onEdit, onDelete }) {
             )}
             {s.extras?.length > 0 && (
               <div className="mt-3 border-t border-line/60 pt-3">
-                <p className="mb-1 text-[11px] font-semibold tracking-wider text-subtle uppercase">Serviços adicionais</p>
-                <ul className="space-y-1">
+                <p className="mb-2 text-[11px] font-semibold tracking-wider text-subtle uppercase">Trabalhos realizados</p>
+                <ul className="grid gap-2 sm:grid-cols-2">
                   {s.extras.map((x, j) => (
-                    <li key={j} className="flex gap-2 text-sm">
-                      <CheckCircle2 size={16} className="mt-0.5 shrink-0 text-brand" />
-                      <span>
+                    <li key={j} className="flex items-center gap-2.5 text-sm">
+                      <PartIcon name={serviceIcon(x.name)} size={32} />
+                      <CheckCircle2 size={15} className="shrink-0 text-ok" />
+                      <span className="min-w-0">
                         <span className="font-semibold text-ink">{x.name}</span>
                         {x.note && <span className="text-muted"> — {x.note}</span>}
                       </span>

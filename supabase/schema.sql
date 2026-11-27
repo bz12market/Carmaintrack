@@ -116,12 +116,39 @@ language sql stable security definer set search_path = public as $$
   )
 $$;
 
+-- Fotografias dos veículos -------------------------------------------------
+-- Os ficheiros ficam no Supabase Storage (bucket privado "vehicle-photos"),
+-- numa pasta por oficina: <workshop_id>/<vehicle_id>/<id>.jpg
+create table if not exists vehicle_photos (
+  id uuid primary key default gen_random_uuid(),
+  workshop_id uuid not null default my_workshop_id() references workshops on delete cascade,
+  vehicle_id uuid not null references vehicles on delete cascade,
+  path text not null,
+  created_at timestamptz not null default now()
+);
+create index if not exists vehicle_photos_vehicle_idx on vehicle_photos (vehicle_id, created_at);
+
+insert into storage.buckets (id, name, public)
+values ('vehicle-photos', 'vehicle-photos', false)
+on conflict (id) do nothing;
+
+-- Identificação pela matrícula (api/plate-lookup.js) ------------------------
+-- Cache partilhada das consultas ao serviço de matrículas; só o servidor
+-- (service role) lê e escreve, por isso tem RLS sem políticas.
+create table if not exists plate_lookups (
+  plate text primary key,
+  data jsonb not null,
+  fetched_at timestamptz not null default now()
+);
+alter table plate_lookups enable row level security;
+
 -- Row Level Security ------------------------------------------------------
 alter table workshops enable row level security;
 alter table clients enable row level security;
 alter table vehicles enable row level security;
 alter table services enable row level security;
 alter table subscriptions enable row level security;
+alter table vehicle_photos enable row level security;
 
 -- Sem subscrição ativa, a conta deixa de ler e escrever os dados da oficina.
 
@@ -144,6 +171,25 @@ drop policy if exists services_owner on services;
 create policy services_owner on services for all
   using (workshop_id = my_workshop_id() and has_active_subscription())
   with check (workshop_id = my_workshop_id() and has_active_subscription());
+
+drop policy if exists vehicle_photos_owner on vehicle_photos;
+create policy vehicle_photos_owner on vehicle_photos for all
+  using (workshop_id = my_workshop_id() and has_active_subscription())
+  with check (workshop_id = my_workshop_id() and has_active_subscription());
+
+-- Ficheiros: cada oficina só lê e escreve na sua pasta do bucket.
+drop policy if exists vehicle_photos_files on storage.objects;
+create policy vehicle_photos_files on storage.objects for all to authenticated
+  using (
+    bucket_id = 'vehicle-photos'
+    and (storage.foldername(name))[1] = public.my_workshop_id()::text
+    and public.has_active_subscription()
+  )
+  with check (
+    bucket_id = 'vehicle-photos'
+    and (storage.foldername(name))[1] = public.my_workshop_id()::text
+    and public.has_active_subscription()
+  );
 
 drop policy if exists subscriptions_read_own on subscriptions;
 create policy subscriptions_read_own on subscriptions for select

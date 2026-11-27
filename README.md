@@ -53,12 +53,24 @@ Para desligar um plano, muda `enabled` para `false`.
 - **Início**: tem uma pesquisa rápida por matrícula, cliente ou modelo. Mostra
   os contadores de veículos em dia, a vencer e atrasados, e os alertas dos
   veículos sem WhatsApp. Também lista os últimos serviços.
-- **Clientes e veículos**: lista com filtros por estado. Cada ficha tem:
-  - proprietário e quilometragem;
+- **Clientes**: lista com pesquisa (nome, telefone, email ou matrícula),
+  "Novo cliente" e uma ficha por cliente com os dados (editáveis), os seus
+  veículos, "Adicionar veículo" (já com o cliente escolhido), WhatsApp,
+  ligar e eliminar (os veículos ficam, sem proprietário).
+- **Veículos**: lista com filtros por estado e "Novo veículo". Cada ficha tem:
+  - proprietário (abre a ficha do cliente) e quilometragem;
   - próxima revisão;
+  - **fotografias**: "Tirar fotografia" (abre a câmara no telemóvel/tablet)
+    e "Anexar fotografias" (vários ficheiros), ver em grande, descarregar,
+    usar como foto principal (a do portal do cliente) e apagar;
   - histórico em timeline;
-  - botões para enviar por WhatsApp, abrir o portal, copiar o link, ver o
-    cartão QR e ligar.
+  - botões para enviar por WhatsApp, abrir o portal, copiar o link, imprimir
+    a etiqueta, ligar e editar.
+- **Identificação pela matrícula**: ao escrever uma matrícula completa no
+  registo de um veículo, a app preenche a marca, o modelo/motor e o ano; o
+  utilizador confirma ("Está correto") ou corrige antes de gravar. Usa o
+  serviço RegCheck (`api/plate-lookup.js`, ver configuração abaixo), com cache
+  na tabela `plate_lookups`; na demonstração os dados são de exemplo.
 - **Registar revisão**: tipo de serviço, data, km, óleo (com sugestões dos
   óleos já usados), filtros, serviços adicionais e observações. A próxima
   revisão é calculada automaticamente (por km e por data, vence o que chegar
@@ -159,6 +171,7 @@ As funções de pagamento (`/api/...`) só correm com a Vercel CLI:
 | `STRIPE_PRICE_ANUAL` | o preço anual (`price_...`) |
 | `STRIPE_TAX_RATE_ID` | Stripe → Product catalog → Tax rates → IVA 23% (`txr_...`) |
 | `APP_URL` | (opcional) o endereço público, se usares domínio próprio |
+| `PLATE_API_USERNAME` | (opcional) utilizador do serviço de matrículas RegCheck ([matricula.co.pt](https://www.matricula.co.pt)); sem ele, a marca e o modelo preenchem-se à mão |
 | `QZ_CERTIFICATE` / `QZ_PRIVATE_KEY` | (opcional) certificado e chave privada (PEM) para o QZ Tray não pedir autorização; ver abaixo |
 
 Depois de mudar variáveis, faz **Redeploy** da produção.
@@ -211,6 +224,20 @@ on conflict (user_id) do update set status = 'active';
    (cartão e débito direto SEPA funcionam com subscrições).
 6. Testa primeiro em **modo de teste** (chaves `sk_test_...`, cartão
    `4242 4242 4242 4242`) e só depois muda para as chaves reais.
+
+### Fotografias (Supabase Storage)
+
+O `schema.sql` cria o bucket privado `vehicle-photos` e as políticas: cada
+oficina só lê e escreve na sua pasta (`<workshop_id>/...`) e só com
+subscrição ativa. As fotografias são reduzidas a 1600 px antes de enviar. O
+plano gratuito do Supabase inclui 1 GB de armazenamento (~3000-5000 fotos).
+
+### Identificação pela matrícula (opcional)
+
+1. Cria uma conta em [matricula.co.pt](https://www.matricula.co.pt) (serviço
+   RegCheck, endpoint `CheckPortugal`) e compra créditos (cada matrícula nova
+   gasta um crédito; as repetidas vêm da cache durante 180 dias).
+2. Na Vercel, define `PLATE_API_USERNAME` com o teu utilizador e faz Redeploy.
 
 ### QZ Tray sem pedidos de autorização (opcional)
 

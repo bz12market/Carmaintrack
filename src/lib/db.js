@@ -1,5 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
 import { demoSeed } from "./demoSeed.js";
+import { resizeImage } from "./util.js";
 
 // O URL tem de ser só a origem do projeto (https://xxxx.supabase.co). Se for
 // colado com um caminho (p.ex. ".../rest/v1/"), o Supabase responde
@@ -185,8 +186,40 @@ export async function api(path, body) {
   }
   const res = await fetch(`/api/${path}`, { method: "POST", headers, body: JSON.stringify(body || {}) });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(json.error || `Erro ${res.status}`);
+  if (!res.ok) throw Object.assign(new Error(json.error || `Erro ${res.status}`), { status: res.status });
   return json;
+}
+
+// --- Identificação pela matrícula -------------------------------------------
+
+// Na demonstração não há serviço de matrículas: os veículos de exemplo dão os
+// seus próprios dados e as outras matrículas dão um carro de exemplo.
+const SAMPLE_CARS = [
+  { make: "Renault", model: "Clio", engine: "1.0 TCe" },
+  { make: "Peugeot", model: "208", engine: "1.2 PureTech" },
+  { make: "Volkswagen", model: "Golf", engine: "2.0 TDI" },
+  { make: "Toyota", model: "Yaris", engine: "1.5 Hybrid" },
+  { make: "Mercedes-Benz", model: "Classe A", engine: "180 d" },
+  { make: "Seat", model: "Ibiza", engine: "1.0 TSI" },
+  { make: "Citroën", model: "C3", engine: "1.2 PureTech" },
+  { make: "BMW", model: "Série 1", engine: "116d" },
+];
+
+/**
+ * Identifica o veículo pela matrícula: { found, make, model, engine, year }.
+ * Fora da demo usa api/plate-lookup.js (serviço RegCheck, com cache).
+ */
+export async function lookupPlate(plate) {
+  if (!isDemo) return api("plate-lookup", { plate });
+  await new Promise((r) => setTimeout(r, 400));
+  const known = demoSeed().vehicles.find((x) => x.plate === plate);
+  if (known) {
+    const [model, ...rest] = known.model.split(" ");
+    return { found: true, make: known.make, model, engine: rest.join(" "), year: known.year, sample: true };
+  }
+  const hash = [...plate].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7);
+  const car = SAMPLE_CARS[hash % SAMPLE_CARS.length];
+  return { found: true, ...car, year: 2012 + (hash % 12), sample: true };
 }
 
 export async function signOut() {
@@ -250,14 +283,97 @@ export async function removeRow(table, id) {
   if (isDemo) {
     const data = demoRead();
     data[table] = data[table].filter((r) => r.id !== id);
-    if (table === "vehicles") data.services = data.services.filter((s) => s.vehicle_id !== id);
+    if (table === "vehicles") {
+      data.services = data.services.filter((s) => s.vehicle_id !== id);
+      data.photos = (data.photos || []).filter((p) => p.vehicle_id !== id);
+    }
     if (table === "clients")
       data.vehicles = data.vehicles.map((v) => (v.client_id === id ? { ...v, client_id: null } : v));
     demoWrite(data);
     return;
   }
+  // Os ficheiros das fotografias não são apagados em cascata: apaga-os primeiro.
+  if (table === "vehicles") {
+    const { data: photos } = await supabase.from("vehicle_photos").select("path").eq("vehicle_id", id);
+    if (photos?.length) await supabase.storage.from(PHOTO_BUCKET).remove(photos.map((p) => p.path));
+  }
   const { error } = await supabase.from(table).delete().eq("id", id);
   if (error) throw error;
+}
+
+// --- Fotografias dos veículos ------------------------------------------------
+// Supabase: ficheiros no bucket privado "vehicle-photos" (pasta da oficina) e
+// uma linha em vehicle_photos. Demo: imagens reduzidas no localStorage.
+
+const PHOTO_BUCKET = "vehicle-photos";
+export const DEMO_PHOTO_LIMIT = 5;
+
+/** Fotografias de um veículo, da mais antiga para a mais recente: [{ id, url, path }]. */
+export async function listPhotos(vehicleId) {
+  if (isDemo) return (demoRead().photos || []).filter((p) => p.vehicle_id === vehicleId);
+  const { data, error } = await supabase
+    .from("vehicle_photos")
+    .select("*")
+    .eq("vehicle_id", vehicleId)
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  if (!data.length) return [];
+  const { data: signed, error: signError } = await supabase.storage
+    .from(PHOTO_BUCKET)
+    .createSignedUrls(data.map((p) => p.path), 3600);
+  if (signError) throw signError;
+  return data.map((p, i) => ({ ...p, url: signed[i]?.signedUrl }));
+}
+
+/** Acrescenta uma fotografia (ficheiro de imagem) a um veículo, já reduzida. */
+export async function addPhoto(vehicle, workshopId, file) {
+  if (isDemo) {
+    const data = demoRead();
+    data.photos = data.photos || [];
+    if (data.photos.length >= DEMO_PHOTO_LIMIT)
+      throw new Error(`Na demonstração pode juntar até ${DEMO_PHOTO_LIMIT} fotografias. Subscreva para fotografias ilimitadas.`);
+    const url = await resizeImage(file, 1000, "image/jpeg", 0.72);
+    const photo = { id: uuid(), vehicle_id: vehicle.id, url, created_at: new Date().toISOString() };
+    data.photos.push(photo);
+    demoWrite(data);
+    return photo;
+  }
+  const dataUrl = await resizeImage(file, 1600, "image/jpeg", 0.82);
+  const blob = await (await fetch(dataUrl)).blob();
+  const path = `${workshopId}/${vehicle.id}/${uuid()}.jpg`;
+  const { error: upError } = await supabase.storage.from(PHOTO_BUCKET).upload(path, blob, { contentType: "image/jpeg" });
+  if (upError) throw upError;
+  const { data, error } = await supabase.from("vehicle_photos").insert({ vehicle_id: vehicle.id, path }).select().single();
+  if (error) {
+    await supabase.storage.from(PHOTO_BUCKET).remove([path]);
+    throw error;
+  }
+  return { ...data, url: dataUrl };
+}
+
+export async function removePhoto(photo) {
+  if (isDemo) {
+    const data = demoRead();
+    data.photos = (data.photos || []).filter((p) => p.id !== photo.id);
+    demoWrite(data);
+    return;
+  }
+  await supabase.storage.from(PHOTO_BUCKET).remove([photo.path]);
+  const { error } = await supabase.from("vehicle_photos").delete().eq("id", photo.id);
+  if (error) throw error;
+}
+
+/** Versão reduzida (para a foto principal do veículo e do portal) de uma fotografia. */
+export async function photoAsMainImage(photo) {
+  let source = photo.url;
+  if (!isDemo) {
+    const { data, error } = await supabase.storage.from(PHOTO_BUCKET).download(photo.path);
+    if (error) throw error;
+    source = data;
+  } else {
+    source = await (await fetch(photo.url)).blob();
+  }
+  return resizeImage(source, 900);
 }
 
 // --- Portal público ---------------------------------------------------------
