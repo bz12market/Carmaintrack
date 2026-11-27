@@ -1,6 +1,74 @@
 import { getPortalPrefix } from "./router.js";
 
-export const FILTERS = ["Filtro de óleo", "Filtro de ar", "Filtro de habitáculo", "Filtro de combustível"];
+export const FILTERS = ["Filtro de óleo", "Filtro de ar", "Filtro de combustível", "Filtro de habitáculo", "Filtro de transmissão"];
+
+// Ícone (src/components/PartIcons.jsx) e nome curto de cada filtro.
+export const FILTER_INFO = {
+  "Filtro de óleo": { icon: "oilFilter", short: "Óleo" },
+  "Filtro de ar": { icon: "airFilter", short: "Ar" },
+  "Filtro de combustível": { icon: "fuelFilter", short: "Combustível" },
+  "Filtro de habitáculo": { icon: "cabinFilter", short: "Habitáculo" },
+  "Filtro de transmissão": { icon: "gearbox", short: "Transmissão" },
+};
+export const filterIcon = (f) => FILTER_INFO[f]?.icon || "oilFilter";
+export const filterShort = (f) => FILTER_INFO[f]?.short || f.replace(/^Filtro de /i, "");
+
+// Serviços adicionais que se escolhem com um toque (o nome fica guardado em
+// services.extras[].name; a nota é livre).
+export const EXTRA_SERVICES = [
+  { name: "Travões", icon: "brakes" },
+  { name: "Pneus", icon: "tyres" },
+  { name: "Bateria", icon: "battery" },
+  { name: "Suspensão", icon: "suspension" },
+  { name: "Alinhamento e equilibragem", icon: "alignment" },
+  { name: "Embraiagem", icon: "clutch" },
+  { name: "Distribuição", icon: "timing" },
+  { name: "Caixa de velocidades", icon: "gearbox" },
+  { name: "Arrefecimento", icon: "cooling" },
+  { name: "Velas / ignição", icon: "sparkPlugs" },
+  { name: "Sistema elétrico", icon: "electric" },
+  { name: "Ar condicionado", icon: "ac" },
+  { name: "Diagnóstico", icon: "diagnostic" },
+  { name: "Motor", icon: "engine" },
+  { name: "Direção", icon: "steering" },
+  { name: "Escape", icon: "exhaust" },
+  { name: "Luzes", icon: "lights" },
+  { name: "Limpa-vidros", icon: "wipers" },
+  { name: "Chapa e pintura", icon: "bodywork" },
+  { name: "Inspeção geral", icon: "inspection" },
+];
+
+// Para serviços escritos à mão (ou antigos), escolhe o ícone pelo texto.
+const ICON_WORDS = [
+  [/trav|pastilh|disco|calço/i, "brakes"],
+  [/alinh|equilib|geometr|convergên/i, "alignment"],
+  [/pneu|jante|furo|válvula/i, "tyres"],
+  [/bateri/i, "battery"],
+  [/suspens|amortec|mola|casquilh|rótula/i, "suspension"],
+  [/embraiag|volante bimassa/i, "clutch"],
+  [/distribu|correia|corrente/i, "timing"],
+  [/caixa|transmiss|diferencial|homocin/i, "gearbox"],
+  [/arrefec|radiador|anticongel|termóstato|bomba de água/i, "cooling"],
+  [/vela|igni|bobine|incandesc/i, "sparkPlugs"],
+  [/elétric|eletric|alternador|motor de arranque|fusív/i, "electric"],
+  [/ar condicionado|\bac\b|climatiz|gás/i, "ac"],
+  [/diagn|scanner|avaria|centralina|eletrónic/i, "diagnostic"],
+  [/direç|cremalheira/i, "steering"],
+  [/escape|catalis|panela|fap|dpf|egr/i, "exhaust"],
+  [/luz|luzes|lâmpada|farol|faróis|ótica/i, "lights"],
+  [/limpa|escova/i, "wipers"],
+  [/chapa|pintura|bate-chapa|polimento/i, "bodywork"],
+  [/inspe|ipo|verifica|check/i, "inspection"],
+  [/motor|junta|culassa|turbo|injet/i, "engine"],
+  [/óleo/i, "oil"],
+  [/filtro/i, "oilFilter"],
+  [/níve/i, "cooling"],
+];
+export function serviceIcon(name = "") {
+  const exact = EXTRA_SERVICES.find((x) => x.name.toLowerCase() === name.trim().toLowerCase());
+  if (exact) return exact.icon;
+  return ICON_WORDS.find(([re]) => re.test(name))?.[1] || "other";
+}
 
 // Nomes usados antes; os serviços já guardados aparecem com os nomes novos.
 const OLD_FILTER_NAMES = {
@@ -10,6 +78,8 @@ const OLD_FILTER_NAMES = {
   "Combustível": "Filtro de combustível",
 };
 export const filterNames = (filters) => [...new Set((filters || []).map((f) => OLD_FILTER_NAMES[f] || f))];
+/** "Óleo, Ar, Combustível" — nomes curtos para mostrar em pouco espaço. */
+export const filterList = (filters) => filterNames(filters).map(filterShort).join(", ");
 export const SERVICE_TITLES = ["Mudança de óleo", "Revisão", "Reparação", "Inspeção pré-IPO", "Outro"];
 
 export const todayISO = () => new Date().toISOString().slice(0, 10);

@@ -67,7 +67,7 @@ export default function VehiclePhotos({ vehicle }) {
   }
 
   return (
-    <section className="space-y-3">
+    <section id="fotos" className="scroll-mt-20 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold tracking-wide text-muted uppercase">
           Fotografias{photos ? ` · ${photos.length}` : ""}

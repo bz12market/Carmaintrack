@@ -4,8 +4,12 @@ import { useStore } from "../lib/store.js";
 import { DEMO_LIMITS, demoLimitMessage, isDemo, lookupPlate } from "../lib/db.js";
 import { navigate } from "../lib/router.js";
 import {
+  EXTRA_SERVICES,
   FILTERS,
+  filterIcon,
   filterNames,
+  filterShort,
+  serviceIcon,
   SERVICE_TITLES,
   addMonths,
   normalizePlate,
@@ -14,6 +18,7 @@ import {
   vehicleName,
 } from "../lib/util.js";
 import { Button, Field, Modal, VehiclePhoto } from "./ui.jsx";
+import PartIcon from "./PartIcons.jsx";
 
 const toInt = (v) => (v === "" || v == null ? null : parseInt(String(v).replace(/\D/g, ""), 10));
 
@@ -419,6 +424,27 @@ export function ServiceForm({ vehicleId, service, onClose }) {
   const toggleFilter = (f) =>
     setS((x) => ({ ...x, filters: x.filters.includes(f) ? x.filters.filter((y) => y !== f) : [...x.filters, f] }));
 
+  // Serviços adicionais: um toque acrescenta a linha (e põe o cursor na nota),
+  // outro toque retira-a.
+  const focusExtra = useRef(null);
+  const setExtra = (i, patch) => setS((p) => ({ ...p, extras: p.extras.map((y, j) => (j === i ? { ...y, ...patch } : y)) }));
+  const focusIf = (el, key) => {
+    if (el && focusExtra.current === key) {
+      focusExtra.current = null;
+      el.focus();
+    }
+  };
+  function addExtra(name) {
+    setS((p) => {
+      focusExtra.current = `${p.extras.length}:${name ? "note" : "name"}`;
+      return { ...p, extras: [...p.extras, { name, note: "" }] };
+    });
+  }
+  function toggleExtra(name) {
+    if (s.extras.some((y) => y.name === name)) setS((p) => ({ ...p, extras: p.extras.filter((y) => y.name !== name) }));
+    else addExtra(name);
+  }
+
   async function submit(e) {
     e.preventDefault();
     setErr("");
@@ -503,63 +529,105 @@ export function ServiceForm({ vehicleId, service, onClose }) {
 
         <div>
           <span className="label">Filtros substituídos</span>
-          <div className="flex flex-wrap gap-2">
-            {FILTERS.map((f) => (
-              <button
-                key={f}
-                type="button"
-                onClick={() => toggleFilter(f)}
-                className={`rounded-full border px-3 py-1.5 text-sm ${
-                  s.filters.includes(f)
-                    ? "border-brand bg-brand/20 text-ink"
-                    : "border-line bg-ink/5 text-muted"
-                }`}
-              >
-                {f}
-              </button>
-            ))}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {FILTERS.map((f) => {
+              const on = s.filters.includes(f);
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  role="checkbox"
+                  aria-checked={on}
+                  aria-label={f}
+                  onClick={() => toggleFilter(f)}
+                  className={`flex items-center gap-2.5 rounded-xl border px-2.5 py-2 text-left text-sm transition ${
+                    on ? "border-brand bg-brand/15 text-ink" : "border-line bg-field text-ink-2 hover:border-brand/50"
+                  }`}
+                >
+                  <span
+                    className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 ${
+                      on ? "border-brand bg-brand text-on-brand" : "border-subtle"
+                    }`}
+                  >
+                    {on && <CheckCircle2 size={14} strokeWidth={3} />}
+                  </span>
+                  <PartIcon name={filterIcon(f)} size={34} />
+                  <span className="font-medium">{filterShort(f)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
         <div>
-          <span className="label">Serviços adicionais / peças</span>
-          <div className="space-y-2">
-            {s.extras.map((x, i) => (
-              <div key={i} className="flex gap-2">
-                <input
-                  className="input"
-                  placeholder="Ex.: Pastilhas de travão"
-                  value={x.name}
-                  onChange={(e) =>
-                    setS({ ...s, extras: s.extras.map((y, j) => (j === i ? { ...y, name: e.target.value } : y)) })
-                  }
-                />
-                <input
-                  className="input"
-                  placeholder="Nota (opcional)"
-                  value={x.note || ""}
-                  onChange={(e) =>
-                    setS({ ...s, extras: s.extras.map((y, j) => (j === i ? { ...y, note: e.target.value } : y)) })
-                  }
-                />
+          <span className="label">Serviços adicionais</span>
+          <p className="mb-2 text-xs text-muted">Toque no que foi feito e escreva uma nota (opcional). O cliente vê esta lista no histórico.</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {EXTRA_SERVICES.map((x) => {
+              const on = s.extras.some((y) => y.name === x.name);
+              return (
                 <button
+                  key={x.name}
                   type="button"
-                  className="rounded-xl px-2 text-subtle hover:text-danger"
-                  onClick={() => setS({ ...s, extras: s.extras.filter((_, j) => j !== i) })}
-                  aria-label="Remover"
+                  aria-pressed={on}
+                  onClick={() => toggleExtra(x.name)}
+                  className={`relative flex items-center gap-2 rounded-xl border px-2 py-2 text-left text-[13px] leading-tight transition ${
+                    on ? "border-brand bg-brand/15 text-ink" : "border-line bg-field text-ink-2 hover:border-brand/50"
+                  }`}
                 >
-                  <Trash2 size={18} />
+                  <PartIcon name={x.icon} size={36} />
+                  <span className="font-medium">{x.name}</span>
+                  {on && (
+                    <CheckCircle2 size={16} className="absolute top-1 right-1 rounded-full bg-surface text-brand" />
+                  )}
                 </button>
-              </div>
-            ))}
+              );
+            })}
             <button
               type="button"
-              className="flex items-center gap-1.5 text-sm font-medium text-brand"
-              onClick={() => setS({ ...s, extras: [...s.extras, { name: "", note: "" }] })}
+              onClick={() => addExtra("")}
+              className="flex items-center gap-2 rounded-xl border border-dashed border-line px-2 py-2 text-left text-[13px] text-muted hover:border-brand/50 hover:text-ink"
             >
-              <Plus size={16} /> Adicionar
+              <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-ink/5">
+                <Plus size={18} />
+              </span>
+              Outro serviço
             </button>
           </div>
+
+          {s.extras.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {s.extras.map((x, i) => (
+                <div key={i} className="flex items-center gap-2" data-extra-row>
+                  <PartIcon name={serviceIcon(x.name)} size={32} />
+                  <input
+                    className="input min-w-0 flex-[2]"
+                    placeholder="Serviço (ex.: Pastilhas de travão)"
+                    aria-label="Serviço"
+                    value={x.name}
+                    ref={(el) => focusIf(el, `${i}:name`)}
+                    onChange={(e) => setExtra(i, { name: e.target.value })}
+                  />
+                  <input
+                    className="input min-w-0 flex-[3]"
+                    placeholder="Nota (ex.: pastilhas dianteiras a 70%)"
+                    aria-label="Nota"
+                    value={x.note || ""}
+                    ref={(el) => focusIf(el, `${i}:note`)}
+                    onChange={(e) => setExtra(i, { note: e.target.value })}
+                  />
+                  <button
+                    type="button"
+                    className="rounded-xl p-2 text-subtle hover:bg-danger/10 hover:text-danger"
+                    onClick={() => setS((p) => ({ ...p, extras: p.extras.filter((_, j) => j !== i) }))}
+                    aria-label="Remover"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <Field label="Observações (visíveis para o cliente)">
